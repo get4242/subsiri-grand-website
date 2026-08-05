@@ -1,0 +1,1 @@
+export function PageHero({kicker,title,description}:{kicker:string;title:string;description:string}){return <section className="page-hero"><div className="ornament"></div><p className="kicker">{kicker}</p><h1>{title}</h1><p>{description}</p></section>}

@@ -1,0 +1,6 @@
+export const serviceCatalog = [
+  { number: "01", title: "ซื้อ–ขายและจัดหาที่ดิน", description: "คัดสรร ประสานงาน และให้ข้อมูลเบื้องต้นสำหรับผู้ซื้อ ผู้ขาย และผู้มองหาที่ดิน", href: "/services/property", note: "PROPERTY", image: "/temporary/services/property-ai-temporary.png", imageAlt: "ภาพภูมิประเทศและผืนดินท่ามกลางแสงเช้า", temporaryVisual: true },
+  { number: "02", title: "ดูฮวงจุ้ย", description: "พิจารณาชัยภูมิ ทิศทาง และการจัดวางพื้นที่ เพื่อใช้ประกอบการออกแบบและตัดสินใจ", href: "/services/feng-shui", note: "FENG SHUI", image: "/temporary/services/feng-shui-ai-temporary.png", imageAlt: "ภาพเข็มทิศฮวงจุ้ยบนผ้าสีน้ำเงินเข้ม", temporaryVisual: true },
+  { number: "03", title: "ตั้งศาลและพิธีพราหมณ์", description: "วางแผนพิธีตั้งศาล ถอนหรือย้ายศาล บวงสรวง และลงเสาเอกตามขอบเขตที่ตกลง", href: "/services/ceremonies", note: "CEREMONIES", image: "/temporary/services/ceremonies-ai-temporary.png", imageAlt: "ภาพศาลพระภูมิสีขาวทองและเครื่องสักการะ", temporaryVisual: true },
+  { number: "04", title: "ตรวจดวงชะตาไทย–จีน", description: "อ่านแนวโน้มตามศาสตร์ที่เลือกเพื่อใช้เป็นมุมมองประกอบการวางแผนชีวิตอย่างมีสติ", href: "/services/horoscope", note: "HOROSCOPE", image: "/temporary/services/horoscope-ai-temporary.png", imageAlt: "ภาพแผนผังดวงชะตาสีทองบนพื้นสีน้ำเงินเข้ม", temporaryVisual: true },
+];

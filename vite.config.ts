@@ -1,7 +1,6 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
-import { sites } from "./build/sites-vite-plugin";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -48,6 +47,11 @@ export default defineConfig(async () => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
+  // `build/` is an ignored local Codex preview helper, so it is not available
+  // in GitHub/Netlify builds. Load it only for the local Codex environment.
+  const localSitesPlugin = process.env.NETLIFY
+    ? []
+    : [(await import("./build/sites-vite-plugin")).sites()];
 
   return {
     server: isCodexSeatbeltSandbox
@@ -55,7 +59,7 @@ export default defineConfig(async () => {
       : undefined,
     plugins: [
       vinext(),
-      sites(),
+      ...localSitesPlugin,
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         config: localBindingConfig,

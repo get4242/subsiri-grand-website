@@ -59,17 +59,12 @@ export default defineConfig(async () => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
-  // `build/` is an ignored local Codex preview helper, so it is not available
-  // in GitHub/Netlify builds. Load it only for the local Codex environment.
-  const localSitesPlugin = [(await import("./build/sites-vite-plugin")).sites()];
-
   return {
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [
       vinext(),
-      ...localSitesPlugin,
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         config: localBindingConfig,

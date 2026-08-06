@@ -22,7 +22,7 @@ function FacebookIcon() {
 export function ContactActions({ variant = "compact", phoneLabel, className = "", onPhoneClick }: ContactActionsProps) {
   return <div className={`contact-actions contact-actions--${variant} ${className}`.trim()} aria-label="ช่องทางติดต่อ โทรศัพท์ LINE และ Facebook">
     <a className="contact-action contact-action--phone" href={contactConfig.phone.href} onClick={onPhoneClick} aria-label={`โทร ${contactConfig.phone.display}`}><PhoneIcon/><span>{phoneLabel ?? contactConfig.phone.display}</span></a>
-    <button className="contact-action contact-action--pending" type="button" disabled title={contactConfig.line.pendingLabel} aria-label={`LINE ${contactConfig.line.display} ${contactConfig.line.pendingLabel}`}><LineIcon/><span>LINE</span><small>{contactConfig.line.pendingLabel}</small></button>
+    <a className="contact-action contact-action--line" href={contactConfig.line.href} target="_blank" rel="noreferrer" aria-label={`${contactConfig.line.display} เปิดในแท็บใหม่`}><LineIcon/><span>LINE</span></a>
     <button className="contact-action contact-action--pending" type="button" disabled title={contactConfig.facebook.pendingLabel} aria-label={`Facebook ${contactConfig.facebook.pendingLabel}`}><FacebookIcon/><span>Facebook</span><small>{contactConfig.facebook.pendingLabel}</small></button>
   </div>;
 }

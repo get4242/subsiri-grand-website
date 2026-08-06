@@ -42,5 +42,7 @@ next-env.d.ts
 /.codex-dev/
 /.codex-spreadsheet/
 /.wrangler/
+/.netlify/
+/.pnpm-store/
 /outputs/
 /work/

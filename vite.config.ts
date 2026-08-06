@@ -45,13 +45,23 @@ export default defineConfig(async () => {
   process.env.WRANGLER_LOG_PATH ??= ".wrangler/logs";
   process.env.MINIFLARE_REGISTRY_PATH ??= ".wrangler/registry";
 
+  const isNetlify = process.env.NETLIFY === "true";
+
+  // Netlify needs Nitro's server adapter. Loading the Cloudflare adapter in
+  // that environment produces a Worker bundle Netlify cannot serve.
+  if (isNetlify) {
+    const { nitro } = await import("nitro/vite");
+
+    return {
+      plugins: [vinext(), nitro()],
+    };
+  }
+
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
   // `build/` is an ignored local Codex preview helper, so it is not available
   // in GitHub/Netlify builds. Load it only for the local Codex environment.
-  const localSitesPlugin = process.env.NETLIFY
-    ? []
-    : [(await import("./build/sites-vite-plugin")).sites()];
+  const localSitesPlugin = [(await import("./build/sites-vite-plugin")).sites()];
 
   return {
     server: isCodexSeatbeltSandbox

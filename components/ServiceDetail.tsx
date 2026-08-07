@@ -1,9 +1,12 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { ContactActions } from "@/components/ContactActions";
 import { CeremonyGallery } from "@/components/CeremonyGallery";
+import { usePublicContent } from "@/components/usePublicContent";
 
 type ServiceDetailProps = {
+  serviceSlug?: string;
   kicker: string;
   title: string;
   description: string;
@@ -20,7 +23,21 @@ type ServiceDetailProps = {
   additionalImages?: string[];
 };
 
-export function ServiceDetail({ kicker, title, description, scopeTitle, scope, steps, price, priceNote, disclaimer, heroImage, heroImageAlt, galleryImages, stepImages, additionalImages }: ServiceDetailProps) {
+export function ServiceDetail({ serviceSlug, kicker, title, description, scopeTitle, scope, steps, price, priceNote, disclaimer, heroImage, heroImageAlt, galleryImages, stepImages, additionalImages }: ServiceDetailProps) {
+  const inferredSlug = serviceSlug ?? (title.includes("ฮวงจุ้ย") ? "feng-shui" : title.includes("พิธีพราหมณ์") ? "ceremonies" : title.includes("ดวงชะตา") ? "horoscope" : "property");
+  const override = usePublicContent().services.find((item) => item.slug === inferredSlug);
+  if (override) {
+    if (typeof override.title === "string") title = override.title;
+    if (typeof override.description === "string" && override.description) description = override.description;
+    if (typeof override.scopeTitle === "string" && override.scopeTitle) scopeTitle = override.scopeTitle;
+    if (Array.isArray(override.scope) && override.scope.length) scope = override.scope as typeof scope;
+    if (Array.isArray(override.steps) && override.steps.length) steps = override.steps as typeof steps;
+    if (typeof override.price === "string" && override.price) price = override.price;
+    if (typeof override.priceNote === "string" && override.priceNote) priceNote = override.priceNote;
+    if (typeof override.disclaimer === "string" && override.disclaimer) disclaimer = override.disclaimer;
+    if (typeof override.image === "string" && override.image) heroImage = override.image;
+    if (typeof override.imageAlt === "string" && override.imageAlt) heroImageAlt = override.imageAlt;
+  }
   return <>
     <section className="service-hero">
       <div className="service-hero-content">
@@ -29,7 +46,7 @@ export function ServiceDetail({ kicker, title, description, scopeTitle, scope, s
         <p>{description}</p>
         <ContactActions variant="hero" phoneLabel="โทรปรึกษาทีมงาน" className="service-contact-actions"/>
       </div>
-      {heroImage ? <div className="service-hero-photo"><Image src={heroImage} alt={heroImageAlt ?? "ภาพผลงานบริการ"} fill priority sizes="(max-width: 900px) 100vw, 42vw" /><span>ผลงานจากสถานที่จริง</span></div> : <div className="service-symbol" aria-hidden="true"><span></span><b>สิริ</b></div>}
+      {heroImage ? <div className="service-hero-photo"><Image src={heroImage} alt={heroImageAlt ?? "ภาพผลงานบริการ"} fill priority unoptimized={heroImage.startsWith("http")} sizes="(max-width: 900px) 100vw, 42vw" /><span>ผลงานจากสถานที่จริง</span></div> : <div className="service-symbol" aria-hidden="true"><span></span><b>สิริ</b></div>}
     </section>
     {galleryImages && <CeremonyGallery images={galleryImages} />}
     <section className="section service-scope">

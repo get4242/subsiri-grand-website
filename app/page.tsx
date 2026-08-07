@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PropertyCard } from "@/components/PropertyCard";
+import { CmsPropertyGrid } from "@/components/CmsPropertyViews";
 import { properties } from "@/data/properties";
-import { serviceCatalog } from "@/data/services";
-import { articles } from "@/data/articles";
 import { homeHeroAsset } from "@/config/assets";
 import { HeroWireMesh } from "@/components/HeroWireMesh";
 import { ContactActions } from "@/components/ContactActions";
+import { CmsHomeServices } from "@/components/CmsServiceCatalog";
+import { CmsHomeArticles } from "@/components/CmsArticleViews";
 
 type BenefitIconName = "map-pin" | "mountain" | "compass" | "landmark";
 
@@ -37,15 +37,15 @@ export default function Home() {
     <section className="lux-services section">
       <div className="gold-flow section-flow" aria-hidden="true"><i></i><i></i><i></i></div>
       <div className="section-heading centered"><p className="kicker">OUR SERVICES</p><h2>บริการที่ดูแลอย่างเป็นองค์รวม</h2><p>จากการค้นหาผืนดิน ไปจนถึงการวางรากฐานเพื่อความสบายใจในช่วงเวลาสำคัญ</p></div>
-      <div className="lux-service-grid">{serviceCatalog.map((service) => <Link href={service.href} key={service.href}><article><div className="service-card-visual"><Image src={service.image} alt={service.imageAlt} fill sizes="(max-width: 620px) 100vw, (max-width: 1050px) 50vw, 25vw" data-temporary-ai-visual={service.temporaryVisual}/><span>{service.number}</span></div><div className="service-card-copy"><small>{service.note}</small><h3>{service.title}</h3><p>{service.description}</p><b>ดูรายละเอียด <i>→</i></b></div></article></Link>)}</div>
+      <CmsHomeServices/>
       <div className="center-action"><Link className="button gold" href="/services">ดูบริการทั้งหมด</Link></div>
     </section>
 
-    <section className="featured-land section"><div className="section-heading split"><div><p className="kicker">SELECTED LAND</p><h2>ที่ดินแนะนำ</h2><p>ข้อมูลจริงจากรายการปัจจุบัน พร้อมรายละเอียดและวิดีโอของแต่ละแปลง</p></div><Link className="text-link" href="/land">ค้นหาที่ดินทั้งหมด <span>→</span></Link></div><div className="property-grid">{properties.map((property) => <PropertyCard key={property.slug} property={property}/>)}</div><p className="disclaimer">ข้อมูล ราคา และสถานะอาจเปลี่ยนแปลงได้ โปรดตรวจสอบรายละเอียดล่าสุดกับทีมงานก่อนตัดสินใจ</p></section>
+    <section className="featured-land section"><div className="section-heading split"><div><p className="kicker">SELECTED LAND</p><h2>ที่ดินแนะนำ</h2><p>ข้อมูลจริงจากรายการปัจจุบัน พร้อมรายละเอียดและวิดีโอของแต่ละแปลง</p></div><Link className="text-link" href="/land">ค้นหาที่ดินทั้งหมด <span>→</span></Link></div><CmsPropertyGrid fallback={properties}/><p className="disclaimer">ข้อมูล ราคา และสถานะอาจเปลี่ยนแปลงได้ โปรดตรวจสอบรายละเอียดล่าสุดกับทีมงานก่อนตัดสินใจ</p></section>
 
     <section className="lux-promo"><div className="promo-image"><Image src="/land/paradise.jpg" alt="ภาพมุมสูงที่ดิน Paradise" fill sizes="(max-width: 900px) 100vw, 50vw" /></div><div className="promo-copy"><p className="kicker">PERSONAL CONSULTATION</p><h2>เริ่มต้นจาก<br/><em>บทสนทนาที่เข้าใจคุณ</em></h2><p>แจ้งทำเล ขนาดพื้นที่ และสิ่งที่คุณกำลังมองหา ทีมงานพร้อมรับฟังและช่วยจัดลำดับข้อมูลเบื้องต้น</p><Link className="button gold" href="/contact">นัดหมายพูดคุย</Link></div></section>
 
-    <section className="article-strip section"><div className="section-heading split"><div><p className="kicker">KNOWLEDGE & STORIES</p><h2>เรื่องราวน่ารู้</h2></div><Link className="text-link" href="/articles">อ่านทั้งหมด <span>→</span></Link></div><div className="strip-list">{articles.map((article, index) => <Link key={article.slug} href={`/articles/${article.slug}`}><article><div className="article-cover"><Image src={article.coverImage} alt={article.coverImageAlt} fill sizes="(max-width: 620px) 100vw, 33vw" data-temporary-ai-visual={article.temporaryVisual}/><span>0{index + 1}</span></div><div className="article-card-copy"><small>{article.category}</small><h3>{article.title}</h3><p>{article.excerpt}</p><b>อ่านบทความ →</b></div></article></Link>)}</div></section>
+    <section className="article-strip section"><div className="section-heading split"><div><p className="kicker">KNOWLEDGE & STORIES</p><h2>เรื่องราวน่ารู้</h2></div><Link className="text-link" href="/articles">อ่านทั้งหมด <span>→</span></Link></div><CmsHomeArticles/></section>
 
     <section className="contact-cta"><div className="gold-flow cta-flow" aria-hidden="true"><i></i><i></i><i></i></div><p className="kicker">BEGIN A CONVERSATION</p><h2>ให้เราเริ่มต้นจากการรับฟัง</h2><p>ไม่ว่าคุณกำลังมองหาที่ดิน ต้องการคำปรึกษาเรื่องชัยภูมิ หรือเตรียมพิธีสำคัญ ทีมงานพร้อมให้ข้อมูลเบื้องต้น</p><ContactActions variant="hero" phoneLabel="โทร 090-249-1459"/><Link className="text-link contact-page-link" href="/contact">ดูข้อมูลติดต่อทั้งหมด →</Link></section>
   </>;

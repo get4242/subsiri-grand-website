@@ -4,6 +4,7 @@ const PROPERTY_HEADERS = [
   "highlightsJson", "updatedAt"
 ];
 const LEAD_HEADERS = ["timestamp", "name", "phone", "email", "interest", "message", "sourceUrl", "status"];
+const CONTENT_HEADERS = ["slug", "dataJson", "enabled", "updatedAt"];
 
 function doPost(e) {
   try {
@@ -17,10 +18,67 @@ function doPost(e) {
     if (action === "upsertProperty") return upsertProperty(input.property);
     if (action === "listLeads") return listLeads();
     if (action === "updateLeadStatus") return updateLeadStatus(input.id, input.status);
+    if (action === "listContent") return listContent(input.kind);
+    if (action === "upsertContent") return upsertContent(input.kind, input.record);
+    if (action === "getPublicContent") return getPublicContent();
+    if (action === "uploadImage") return uploadImage(input.upload);
     return jsonOutput({ ok: false, error: "unknown_action" });
   } catch (error) {
     return jsonOutput({ ok: false, error: String(error && error.message || error) });
   }
+}
+
+function contentSheetName(kind) {
+  const names = { services: "Services", articles: "Articles", promotions: "Promotions" };
+  return names[String(kind)] || "";
+}
+
+function listContent(kind) {
+  const name = contentSheetName(kind);
+  if (!name) return jsonOutput({ ok: false, error: "invalid_content_kind" });
+  const sheet = getOrCreateSheet(name, CONTENT_HEADERS);
+  if (sheet.getLastRow() < 2) return jsonOutput({ ok: true, records: [] });
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, CONTENT_HEADERS.length).getValues();
+  const records = rows.filter(function(row) { return row[0]; }).map(function(row) {
+    try { return JSON.parse(row[1] || "{}"); } catch (error) { return null; }
+  }).filter(Boolean);
+  return jsonOutput({ ok: true, records: records });
+}
+
+function upsertContent(kind, record) {
+  const name = contentSheetName(kind);
+  if (!name || !record || !record.slug) return jsonOutput({ ok: false, error: "invalid_content" });
+  const sheet = getOrCreateSheet(name, CONTENT_HEADERS);
+  const slugs = sheet.getLastRow() < 2 ? [] : sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().map(function(row) { return String(row[0]); });
+  const index = slugs.indexOf(String(record.slug));
+  const row = index < 0 ? sheet.getLastRow() + 1 : index + 2;
+  sheet.getRange(row, 1, 1, CONTENT_HEADERS.length).setValues([[record.slug, JSON.stringify(record), record.enabled !== false, new Date().toISOString()]]);
+  return jsonOutput({ ok: true, record: record });
+}
+
+function getPublicContent() {
+  const propertiesResult = parseOutput(listProperties());
+  const serviceResult = parseOutput(listContent("services"));
+  const articleResult = parseOutput(listContent("articles"));
+  const promotionResult = parseOutput(listContent("promotions"));
+  return jsonOutput({ ok: true, properties: propertiesResult.properties || [], services: serviceResult.records || [], articles: articleResult.records || [], promotions: promotionResult.records || [] });
+}
+
+function parseOutput(output) { return JSON.parse(output.getContent()); }
+
+function uploadImage(upload) {
+  if (!upload || !upload.data || !upload.mimeType) return jsonOutput({ ok: false, error: "invalid_upload" });
+  const rootName = "Subsiri Website Uploads";
+  const roots = DriveApp.getFoldersByName(rootName);
+  const root = roots.hasNext() ? roots.next() : DriveApp.createFolder(rootName);
+  const folderName = String(upload.folder || "general").replace(/[^a-zA-Z0-9_-]/g, "-");
+  const folders = root.getFoldersByName(folderName);
+  const folder = folders.hasNext() ? folders.next() : root.createFolder(folderName);
+  const bytes = Utilities.base64Decode(upload.data);
+  const blob = Utilities.newBlob(bytes, upload.mimeType, upload.filename || ("image-" + Date.now()));
+  const file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return jsonOutput({ ok: true, url: "https://drive.google.com/uc?export=view&id=" + file.getId(), fileId: file.getId() });
 }
 
 function getOrCreateSheet(name, headers) {

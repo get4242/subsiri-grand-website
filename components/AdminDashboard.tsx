@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPropertiesPanel, type AdminPropertyRow } from "@/components/AdminPropertiesPanel";
 import { AdminLeadsPanel, type AdminLead } from "@/components/AdminLeadsPanel";
+import { AdminContentManager, type AdminContentRecord } from "@/components/AdminContentManager";
+import { mergeBySlug } from "@/lib/cms-data";
 
 type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customers" | "promotions" | "settings";
 type PropertyRow = AdminPropertyRow;
-type ServiceRow = { number: string; title: string; note: string };
-type ArticleRow = { slug: string; title: string; category: string; publishedAt: string };
+type ServiceRow = AdminContentRecord;
+type ArticleRow = AdminContentRecord;
 
 type AdminDashboardProps = {
   properties: PropertyRow[];
@@ -45,7 +47,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
         if (!response.ok || !Array.isArray(body.properties)) throw new Error("not connected");
-        if (body.properties.length > 0) setPropertyRows(body.properties);
+        if (body.properties.length > 0) setPropertyRows((current) => mergeBySlug(current, body.properties));
         setDataMode("connected");
       })
       .catch(() => setDataMode("fallback"));
@@ -86,13 +88,13 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
           <AdminPropertiesPanel properties={propertyRows} onChange={setPropertyRows} />
         )}
 
-        {activeTab === "services" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>SERVICES</p><h2>บริการของบริษัท</h2></div></div><div className="admin-card-list">{services.map((service) => <article key={service.number}><span>{service.number}</span><div><h3>{service.title}</h3><p>{service.note}</p></div><button type="button" onClick={() => uiOnly(`แก้ไขบริการ ${service.title}`)}>แก้ไข</button></article>)}</div></section>}
+        {activeTab === "services" && <AdminContentManager kind="services" initial={services}/>}
 
-        {activeTab === "articles" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>CONTENT</p><h2>บทความ</h2></div><button className="is-primary" type="button" onClick={() => uiOnly("สร้างบทความใหม่")}>＋ เขียนบทความ</button></div><div className="admin-table-wrap"><table><thead><tr><th>หัวข้อ</th><th>หมวดหมู่</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>{articles.map((article) => <tr key={article.slug}><td><strong>{article.title}</strong><small>/{article.slug}</small></td><td>{article.category}</td><td><StatusPill status="เผยแพร่แล้ว"/></td><td><button className="admin-text-button" type="button" onClick={() => uiOnly(`แก้ไขบทความ ${article.title}`)}>แก้ไข</button></td></tr>)}</tbody></table></div></section>}
+        {activeTab === "articles" && <AdminContentManager kind="articles" initial={articles}/>}
 
         {activeTab === "customers" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>LEAD PIPELINE</p><h2>ลูกค้าและการติดตาม</h2></div></div><AdminLeadsPanel leads={leads} onChange={setLeads}/></section>}
 
-        {activeTab === "promotions" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>PROMOTIONS</p><h2>โปรโมชั่นบนเว็บไซต์</h2></div><button className="is-primary" type="button" onClick={() => uiOnly("สร้างโปรโมชั่น")}>＋ สร้างโปรโมชั่น</button></div><div className="admin-empty-card"><span>％</span><h3>โปรโมชันปรึกษาข้อมูลที่ดินเบื้องต้น</h3><p>ตัวอย่าง popup ที่แสดงอยู่บนหน้าบ้าน ปัจจุบันเป็นข้อมูลจาก config ในโค้ด</p><StatusPill status="เปิดใช้งาน"/><button type="button" onClick={() => uiOnly("แก้ไขโปรโมชั่น")}>แก้ไขตัวอย่าง</button></div></section>}
+        {activeTab === "promotions" && <AdminContentManager kind="promotions" initial={[{ slug: "homepage-popup", title: "ปรึกษาข้อมูลที่ดินเบื้องต้น", description: "แจ้งทำเล ขนาดพื้นที่ และวัตถุประสงค์ ทีมงานพร้อมรับฟัง", eyebrow: "SPECIAL UPDATE", ctaLabel: "ติดต่อทีมงาน", ctaHref: "/contact", enabled: true }]}/>}
 
         {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><label>ชื่อบริษัท<input value="บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" readOnly/></label><label>เบอร์โทร<input value="090-249-1459" readOnly/></label><label>อีเมล<input value="contact@subsiri.co.th" readOnly/></label><button type="button" onClick={() => uiOnly("บันทึกข้อมูลบริษัท")}>บันทึกตัวอย่าง</button></article><article className="admin-panel"><p>INTEGRATIONS</p><h2>การเชื่อมต่อ</h2><div className="admin-integration"><span>Google Sheets</span><StatusPill status="ยังไม่เชื่อมต่อ"/></div><div className="admin-integration"><span>LINE OA</span><StatusPill status="ยังไม่เชื่อมต่อ"/></div><div className="admin-integration"><span>ระบบเข้าสู่ระบบ</span><StatusPill status="ยังไม่ติดตั้ง"/></div></article></section>}
       </main>

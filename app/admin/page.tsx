@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 
 export default function AdminPage() {
   return <AdminPortal><AdminDashboard
-    properties={properties.map(({ slug, name, location, area, price, status }) => ({ slug, name, location, area, price, status }))}
-    services={serviceCatalog.map(({ number, title, note }) => ({ number, title, note }))}
-    articles={articles.map(({ slug, title, category, publishedAt }) => ({ slug, title, category, publishedAt }))}
+    properties={properties}
+    services={serviceCatalog.map((service) => ({ ...service, slug: service.href.split("/").pop() || service.number, enabled: true }))}
+    articles={articles.map((article) => ({ ...article, description: article.excerpt, enabled: true }))}
   /></AdminPortal>;
 }

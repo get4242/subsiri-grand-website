@@ -6,7 +6,7 @@ export function PropertyCard({ property }: { property: Property }) {
   const isSold = property.status === "sold";
   return <article className={`property-card${isSold ? " is-sold" : ""}`}>
     <div className="property-image">
-      <Image src={property.image} alt={`ภาพที่ดิน ${property.name}`} fill sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 33vw" />
+      <Image src={property.image} alt={`ภาพที่ดิน ${property.name}`} fill unoptimized={property.image.startsWith("http")} sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 33vw" />
       <span className={`status${isSold ? " sold-badge" : ""}`}>{isSold ? "SOLD OUT" : property.status}</span>
     </div>
     <div className="property-body">

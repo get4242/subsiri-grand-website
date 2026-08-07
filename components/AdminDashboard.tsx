@@ -6,6 +6,7 @@ import { AdminPropertiesPanel, type AdminPropertyRow } from "@/components/AdminP
 import { AdminLeadsPanel, type AdminLead } from "@/components/AdminLeadsPanel";
 import { AdminContentManager, type AdminContentRecord } from "@/components/AdminContentManager";
 import { AdminContactSettings } from "@/components/AdminContactSettings";
+import { AdminCompanySettings } from "@/components/AdminCompanySettings";
 import { mergeBySlug } from "@/lib/cms-data";
 
 type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customers" | "promotions" | "settings";
@@ -100,7 +101,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
 
         {activeTab === "promotions" && <AdminContentManager kind="promotions" initial={[{ slug: "homepage-popup", title: "ปรึกษาข้อมูลที่ดินเบื้องต้น", description: "แจ้งทำเล ขนาดพื้นที่ และวัตถุประสงค์ ทีมงานพร้อมรับฟัง", eyebrow: "SPECIAL UPDATE", ctaLabel: "ติดต่อทีมงาน", ctaHref: "/contact", enabled: true }]}/>}
 
-        {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel admin-company-card"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><div className="admin-company-detail"><span>บริษัท</span><strong>บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด</strong></div><div className="admin-company-detail"><span>โทรศัพท์</span><strong>090-249-1459</strong></div><div className="admin-company-detail"><span>อีเมล</span><strong>contact@subsiri.co.th</strong></div><div className="admin-system-summary"><span className={integrations.googleSheets ? "is-ready" : ""}>● ข้อมูลเว็บไซต์</span><span className={integrations.imageUploads ? "is-ready" : ""}>● คลังรูป</span><span className={integrations.login ? "is-ready" : ""}>● ระบบผู้ดูแล</span></div></article><AdminContactSettings/></section>}
+        {activeTab === "settings" && <section className="admin-settings-grid"><AdminCompanySettings integrations={integrations}/><AdminContactSettings/></section>}
       </main>
       {notice && <div className="admin-toast" role="status">{notice}</div>}
     </div>

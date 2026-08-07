@@ -1,0 +1,14 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { defaultPublicContactSettings } from "@/components/usePublicContactSettings";
+
+type CompanySettings = Pick<typeof defaultPublicContactSettings, "companyName" | "phone" | "email">;
+
+export function AdminCompanySettings({ integrations }: { integrations: { googleSheets: boolean; imageUploads: boolean; login: boolean } }) {
+  const [settings, setSettings] = useState<CompanySettings>(defaultPublicContactSettings);
+  const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");
+  useEffect(() => { fetch("/.netlify/functions/admin-contact-settings", { credentials: "same-origin", cache: "no-store" }).then(async (response) => { const body = await response.json(); if (response.ok && body.settings) setSettings((current) => ({ ...current, ...body.settings })); }).catch(() => setMessage("ไม่สามารถโหลดข้อมูลล่าสุดได้")); }, []);
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSaving(true); setMessage(""); try { const response = await fetch("/.netlify/functions/admin-contact-settings", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body.error || "บันทึกไม่สำเร็จ"); setSettings({ companyName: body.settings.companyName, phone: body.settings.phone, email: body.settings.email }); setMessage("บันทึกข้อมูลบริษัทเรียบร้อยแล้ว"); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "บันทึกไม่สำเร็จ"); } finally { setSaving(false); } };
+  return <article className="admin-panel admin-company-card"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><p className="admin-settings-lead">แก้ไขชื่อบริษัท เบอร์โทร และอีเมลที่ใช้บนเว็บไซต์</p><form className="admin-company-form" onSubmit={submit}><label>ชื่อบริษัท<input value={settings.companyName} onChange={(event) => setSettings({ ...settings, companyName: event.target.value })} required maxLength={160}/></label><label>เบอร์โทร<input type="tel" value={settings.phone} onChange={(event) => setSettings({ ...settings, phone: event.target.value })} required maxLength={30}/></label><label>อีเมล<input type="email" value={settings.email} onChange={(event) => setSettings({ ...settings, email: event.target.value })} required maxLength={160}/></label><button type="submit" disabled={saving}>{saving ? "กำลังบันทึก…" : "บันทึกข้อมูลบริษัท"}</button>{message && <p className="admin-social-message" role="status">{message}</p>}</form><div className="admin-system-summary"><span className={integrations.googleSheets ? "is-ready" : ""}>● ข้อมูลเว็บไซต์</span><span className={integrations.imageUploads ? "is-ready" : ""}>● คลังรูป</span><span className={integrations.login ? "is-ready" : ""}>● ระบบผู้ดูแล</span></div></article>;
+}

@@ -47,6 +47,6 @@ export default function Home() {
 
     <section className="article-strip section"><div className="section-heading split"><div><p className="kicker">KNOWLEDGE & STORIES</p><h2>เรื่องราวน่ารู้</h2></div><Link className="text-link" href="/articles">อ่านทั้งหมด <span>→</span></Link></div><CmsHomeArticles/></section>
 
-    <section className="contact-cta"><div className="gold-flow cta-flow" aria-hidden="true"><i></i><i></i><i></i></div><p className="kicker">BEGIN A CONVERSATION</p><h2>ให้เราเริ่มต้นจากการรับฟัง</h2><p>ไม่ว่าคุณกำลังมองหาที่ดิน ต้องการคำปรึกษาเรื่องชัยภูมิ หรือเตรียมพิธีสำคัญ ทีมงานพร้อมให้ข้อมูลเบื้องต้น</p><ContactActions variant="hero" phoneLabel="โทร 090-249-1459"/><Link className="text-link contact-page-link" href="/contact">ดูข้อมูลติดต่อทั้งหมด →</Link></section>
+    <section className="contact-cta"><div className="gold-flow cta-flow" aria-hidden="true"><i></i><i></i><i></i></div><p className="kicker">BEGIN A CONVERSATION</p><h2>ให้เราเริ่มต้นจากการรับฟัง</h2><p>ไม่ว่าคุณกำลังมองหาที่ดิน ต้องการคำปรึกษาเรื่องชัยภูมิ หรือเตรียมพิธีสำคัญ ทีมงานพร้อมให้ข้อมูลเบื้องต้น</p><ContactActions variant="hero"/><Link className="text-link contact-page-link" href="/contact">ดูข้อมูลติดต่อทั้งหมด →</Link></section>
   </>;
 }

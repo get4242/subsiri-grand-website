@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ContactActions } from "@/components/ContactActions";
+import { ContactEmail } from "@/components/ContactEmail";
 import { CeremonyGallery } from "@/components/CeremonyGallery";
 import { usePublicContent } from "@/components/usePublicContent";
 
@@ -62,6 +63,6 @@ export function ServiceDetail({ serviceSlug, kicker, title, description, scopeTi
       <aside><strong>ข้อมูลก่อนนัดหมาย</strong><p>{disclaimer}</p><p>ศาสตร์และพิธีกรรมเป็นเรื่องของความเชื่อส่วนบุคคล บริการนี้ไม่ใช่การรับรองผลลัพธ์ และไม่ทดแทนคำแนะนำด้านกฎหมาย วิศวกรรม หรือวิชาชีพที่เกี่ยวข้อง</p></aside>
     </section>
     {additionalImages && <section className="section ceremony-more" aria-labelledby="ceremony-more-title"><div className="section-heading centered"><p className="kicker">MORE WORKS</p><h2 id="ceremony-more-title">รายละเอียดจากผลงานเพิ่มเติม</h2></div><div className="ceremony-more-grid">{additionalImages.map((src, index) => <figure key={src}><Image src={src} alt={`รายละเอียดการจัดเตรียมพิธี ภาพที่ ${index + 1}`} fill sizes="(max-width: 620px) 100vw, 33vw" /></figure>)}</div></section>}
-    <section className="contact-cta"><p className="kicker">BEGIN A CONVERSATION</p><h2>ปรึกษารายละเอียดกับทีมงาน</h2><p>แจ้งประเภทสถานที่ ทำเล ขนาดพื้นที่โดยประมาณ และช่วงเวลาที่สะดวก เพื่อให้ทีมงานประเมินขอบเขตเบื้องต้น</p><ContactActions variant="hero" phoneLabel="โทร 090-249-1459"/><a className="text-link contact-email-link" href="mailto:contact@subsiri.co.th">contact@subsiri.co.th</a><Link className="back-link" href="/">← กลับหน้าแรก</Link></section>
+    <section className="contact-cta"><p className="kicker">BEGIN A CONVERSATION</p><h2>ปรึกษารายละเอียดกับทีมงาน</h2><p>แจ้งประเภทสถานที่ ทำเล ขนาดพื้นที่โดยประมาณ และช่วงเวลาที่สะดวก เพื่อให้ทีมงานประเมินขอบเขตเบื้องต้น</p><ContactActions variant="hero"/><ContactEmail className="text-link contact-email-link"/><Link className="back-link" href="/">← กลับหน้าแรก</Link></section>
   </>;
 }

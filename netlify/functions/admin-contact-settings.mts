@@ -12,7 +12,9 @@ export default async function adminContactSettings(request: Request) {
     return json(200, { ok: true, settings: normalizeContactSettings(saved) || defaultContactSettings });
   }
   if (request.method !== "PUT") return json(405, { ok: false, error: "Method ไม่ถูกต้อง" });
-  const settings = normalizeContactSettings(await request.json().catch(() => null));
+  const current = normalizeContactSettings(await store.get("contact", { type: "json" }).catch(() => null)) || defaultContactSettings;
+  const input = await request.json().catch(() => null);
+  const settings = normalizeContactSettings(input && typeof input === "object" ? { ...current, ...input } : null);
   if (!settings) return json(400, { ok: false, error: "กรุณาใส่ลิงก์ LINE หรือ Facebook ที่ถูกต้องและขึ้นต้นด้วย https://" });
   await store.setJSON("contact", settings);
   return json(200, { ok: true, settings });

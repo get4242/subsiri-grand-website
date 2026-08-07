@@ -1,7 +1,7 @@
 "use client";
 
 import { contactConfig } from "@/config/contact";
-import { useEffect, useState } from "react";
+import { phoneHref, usePublicContactSettings } from "@/components/usePublicContactSettings";
 
 type ContactActionsProps = {
   variant?: "compact" | "hero" | "card" | "footer" | "header" | "dock";
@@ -23,11 +23,10 @@ function FacebookIcon() {
 }
 
 export function ContactActions({ variant = "compact", phoneLabel, className = "", onPhoneClick }: ContactActionsProps) {
-  const [social, setSocial] = useState({ lineUrl: contactConfig.line.href, facebookUrl: contactConfig.facebook.href as string | null });
-  useEffect(() => { fetch("/.netlify/functions/public-contact-settings").then(async (response) => { if (!response.ok) return; const value = await response.json(); setSocial({ lineUrl: value.lineUrl || contactConfig.line.href, facebookUrl: value.facebookUrl || null }); }).catch(() => null); }, []);
+  const settings = usePublicContactSettings();
   return <div className={`contact-actions contact-actions--${variant} ${className}`.trim()} aria-label="ช่องทางติดต่อ โทรศัพท์ LINE และ Facebook">
-    <a className="contact-action contact-action--phone" href={contactConfig.phone.href} onClick={onPhoneClick} aria-label={`โทร ${contactConfig.phone.display}`}><PhoneIcon/><span>{phoneLabel ?? contactConfig.phone.display}</span></a>
-    <a className="contact-action contact-action--line" href={social.lineUrl} target="_blank" rel="noreferrer" aria-label={`${contactConfig.line.display} เปิดในแท็บใหม่`}><LineIcon/><span>LINE</span></a>
-    {social.facebookUrl ? <a className="contact-action contact-action--facebook" href={social.facebookUrl} target="_blank" rel="noreferrer" aria-label="Facebook เปิดในแท็บใหม่"><FacebookIcon/><span>Facebook</span></a> : <button className="contact-action contact-action--pending" type="button" disabled title={contactConfig.facebook.pendingLabel} aria-label={`Facebook ${contactConfig.facebook.pendingLabel}`}><FacebookIcon/><span>Facebook</span><small>{contactConfig.facebook.pendingLabel}</small></button>}
+    <a className="contact-action contact-action--phone" href={phoneHref(settings.phone)} onClick={onPhoneClick} aria-label={`โทร ${settings.phone}`}><PhoneIcon/><span>{phoneLabel ?? settings.phone}</span></a>
+    <a className="contact-action contact-action--line" href={settings.lineUrl} target="_blank" rel="noreferrer" aria-label={`${contactConfig.line.display} เปิดในแท็บใหม่`}><LineIcon/><span>LINE</span></a>
+    {settings.facebookUrl ? <a className="contact-action contact-action--facebook" href={settings.facebookUrl} target="_blank" rel="noreferrer" aria-label="Facebook เปิดในแท็บใหม่"><FacebookIcon/><span>Facebook</span></a> : <button className="contact-action contact-action--pending" type="button" disabled title={contactConfig.facebook.pendingLabel} aria-label={`Facebook ${contactConfig.facebook.pendingLabel}`}><FacebookIcon/><span>Facebook</span><small>{contactConfig.facebook.pendingLabel}</small></button>}
   </div>;
 }

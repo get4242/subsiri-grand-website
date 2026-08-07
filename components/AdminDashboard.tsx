@@ -11,6 +11,7 @@ type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customer
 type PropertyRow = AdminPropertyRow;
 type ServiceRow = AdminContentRecord;
 type ArticleRow = AdminContentRecord;
+type IntegrationStatus = { googleSheets: boolean; lineOA: boolean; login: boolean; imageUploads: boolean };
 
 type AdminDashboardProps = {
   properties: PropertyRow[];
@@ -29,7 +30,7 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
 ];
 
 function StatusPill({ status }: { status: string }) {
-  const tone = status === "sold" ? "muted" : status === "ติดต่อใหม่" ? "new" : status === "นัดหมายแล้ว" ? "success" : "progress";
+  const tone = status === "sold" ? "muted" : status === "ติดต่อใหม่" ? "new" : ["นัดหมายแล้ว", "เชื่อมต่อแล้ว", "พร้อมใช้งาน"].includes(status) ? "success" : "progress";
   return <span className={`admin-status is-${tone}`}>{status === "sold" ? "ขายแล้ว" : status}</span>;
 }
 
@@ -39,6 +40,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
   const [propertyRows, setPropertyRows] = useState(properties);
   const [dataMode, setDataMode] = useState<"loading" | "connected" | "fallback">("loading");
   const [leads, setLeads] = useState<AdminLead[]>([]);
+  const [integrations, setIntegrations] = useState<IntegrationStatus>({ googleSheets: false, lineOA: false, login: true, imageUploads: false });
   const available = useMemo(() => propertyRows.filter((item) => item.status !== "sold").length, [propertyRows]);
   const sold = propertyRows.length - available;
 
@@ -54,6 +56,12 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
   }, []);
 
   useEffect(() => {
+    fetch("/.netlify/functions/admin-system-status", { credentials: "same-origin", cache: "no-store" })
+      .then(async (response) => { const body = await response.json().catch(() => ({})); if (response.ok && body.integrations) setIntegrations(body.integrations); })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
     fetch("/.netlify/functions/admin-leads", { credentials: "same-origin", cache: "no-store" })
       .then(async (response) => { const body = await response.json().catch(() => ({})); if (!response.ok || !Array.isArray(body.leads)) throw new Error(); setLeads(body.leads); })
       .catch(() => setLeads([]));
@@ -66,14 +74,14 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
 
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <div className="admin-brand"><span>SG</span><div><strong>SUBSIRI</strong><small>ADMIN PREVIEW</small></div></div>
+      <div className="admin-brand"><span>SG</span><div><strong>SUBSIRI</strong><small>ADMIN SYSTEM</small></div></div>
       <nav aria-label="เมนูผู้ดูแลตัวอย่าง">{tabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? "is-active" : ""} onClick={() => setActiveTab(tab.id)}><span aria-hidden="true">{tab.icon}</span>{tab.label}</button>)}</nav>
       <Link className="admin-back-link" href="/">← กลับหน้าบ้าน</Link>
     </aside>
 
     <div className="admin-main">
       <div className="admin-demo-alert" role="status"><strong>{dataMode === "connected" ? "เชื่อมต่อแล้ว" : "โหมดสำรอง"}</strong><span>{dataMode === "loading" ? "— กำลังโหลดข้อมูล Google Sheets" : dataMode === "connected" ? "— เข้าสู่ระบบแล้ว และกำลังใช้ข้อมูลจาก Google Sheets" : "— เข้าสู่ระบบแล้ว แต่ยังใช้ข้อมูลในเว็บไซต์จนกว่าจะตั้งค่า Apps Script"}</span></div>
-      <header className="admin-topbar"><div><p>SUBSIRI GRAND GROUP</p><h1>{tabs.find((tab) => tab.id === activeTab)?.label}</h1></div><div className="admin-profile"><span>ผด</span><div><strong>ผู้ดูแลระบบ</strong><small>ข้อมูลจำลอง</small></div></div></header>
+      <header className="admin-topbar"><div><p>SUBSIRI GRAND GROUP</p><h1>{tabs.find((tab) => tab.id === activeTab)?.label}</h1></div><div className="admin-profile"><span>ผด</span><div><strong>ผู้ดูแลระบบ</strong><small>{dataMode === "connected" ? "ข้อมูลระบบจริง" : "โหมดสำรอง"}</small></div></div></header>
 
       <main className="admin-content">
         {activeTab === "dashboard" && <>
@@ -96,7 +104,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
 
         {activeTab === "promotions" && <AdminContentManager kind="promotions" initial={[{ slug: "homepage-popup", title: "ปรึกษาข้อมูลที่ดินเบื้องต้น", description: "แจ้งทำเล ขนาดพื้นที่ และวัตถุประสงค์ ทีมงานพร้อมรับฟัง", eyebrow: "SPECIAL UPDATE", ctaLabel: "ติดต่อทีมงาน", ctaHref: "/contact", enabled: true }]}/>}
 
-        {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><label>ชื่อบริษัท<input value="บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" readOnly/></label><label>เบอร์โทร<input value="090-249-1459" readOnly/></label><label>อีเมล<input value="contact@subsiri.co.th" readOnly/></label><button type="button" onClick={() => uiOnly("บันทึกข้อมูลบริษัท")}>บันทึกตัวอย่าง</button></article><article className="admin-panel"><p>INTEGRATIONS</p><h2>การเชื่อมต่อ</h2><div className="admin-integration"><span>Google Sheets</span><StatusPill status="ยังไม่เชื่อมต่อ"/></div><div className="admin-integration"><span>LINE OA</span><StatusPill status="ยังไม่เชื่อมต่อ"/></div><div className="admin-integration"><span>ระบบเข้าสู่ระบบ</span><StatusPill status="ยังไม่ติดตั้ง"/></div></article></section>}
+        {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><label>ชื่อบริษัท<input value="บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" readOnly/></label><label>เบอร์โทร<input value="090-249-1459" readOnly/></label><label>อีเมล<input value="contact@subsiri.co.th" readOnly/></label><p className="admin-settings-note">ข้อมูลติดต่อหลักอ่านจากค่ากลางของเว็บไซต์ เพื่อป้องกันข้อมูลแต่ละหน้าต่างกัน</p></article><article className="admin-panel"><p>INTEGRATIONS</p><h2>การเชื่อมต่อ</h2><p className="admin-settings-note">สถานะด้านล่างตรวจจากระบบจริงและเปลี่ยนให้อัตโนมัติ โดยไม่แสดงรหัสลับ</p><div className="admin-integration"><span>Google Sheets</span><StatusPill status={integrations.googleSheets ? "เชื่อมต่อแล้ว" : "ยังไม่เชื่อมต่อ"}/></div><div className="admin-integration"><span>LINE OA</span><StatusPill status={integrations.lineOA ? "เชื่อมต่อแล้ว" : "ยังไม่เชื่อมต่อ"}/></div><div className="admin-integration"><span>ระบบเข้าสู่ระบบ</span><StatusPill status={integrations.login ? "พร้อมใช้งาน" : "ยังไม่พร้อม"}/></div><div className="admin-integration"><span>อัปโหลดรูป Google Drive</span><StatusPill status={integrations.imageUploads ? "พร้อมใช้งาน" : "ยังไม่พร้อม"}/></div></article></section>}
       </main>
       {notice && <div className="admin-toast" role="status">{notice}</div>}
     </div>

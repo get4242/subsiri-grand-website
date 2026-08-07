@@ -193,3 +193,14 @@ body:has(.admin-shell){background:#eef1f4;color:#17222c}body:has(.admin-shell)>.
 @media(max-width:760px){.admin-editor-backdrop{padding:10px}.admin-editor{max-height:calc(100vh - 20px);padding:20px}.admin-form-grid{grid-template-columns:1fr}.admin-editor-actions{position:sticky;bottom:-20px;margin:20px -20px -20px;padding:12px 20px;background:#fff;border-top:1px solid var(--admin-border)}}
 .admin-form-grid label small{display:block;margin-top:5px;color:#89949d;font-size:.58rem}.admin-image-uploader{margin-top:16px;padding:16px;border:1px dashed #c9a86a;background:#fffaf0}.admin-image-uploader>label{display:block}.admin-image-uploader input[type=file]{height:auto;border:0;background:transparent}.admin-image-uploader p{color:#6d7880;font-size:.65rem}.admin-image-uploader ol{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}.admin-image-uploader li{display:flex;justify-content:space-between;align-items:center;padding:7px 9px;background:#fff;border:1px solid #e1e5e8;font-size:.65rem}.admin-image-uploader li button{border:0;background:transparent;color:#8b3333;cursor:pointer}.admin-check{display:flex!important;align-items:center;gap:8px;margin-top:22px}.admin-check input{width:18px!important;height:18px!important;margin:0!important}
 @media(max-width:760px){.admin-authenticated>.admin-logout-button{position:relative;inset:auto;z-index:auto;display:block;width:calc(100% - 28px);min-height:44px;margin:14px}}
+
+/* Admin usability fixes: preserve editorial line breaks, preview uploads, and let logout scroll naturally. */
+.lead-copy{white-space:pre-line;overflow-wrap:anywhere;line-height:1.9}
+.admin-authenticated{position:relative}
+.admin-authenticated>.admin-logout-button{position:absolute;top:104px;right:22px}
+.admin-settings-note{margin:16px 0 0;color:#6d7880;font-size:.66rem;line-height:1.7}
+.admin-upload-count{display:block;margin-top:10px;color:var(--admin-navy);font-size:.7rem}
+.admin-upload-list li{display:grid;grid-template-columns:112px 1fr auto;gap:12px;align-items:center}
+.admin-upload-thumb{width:112px;height:76px;object-fit:cover;border:1px solid #d8dee3;background:#eef1f4}
+.admin-upload-empty{margin:10px 0 0;padding:10px;border:1px solid #e1e5e8;background:#fff;color:#7b858d!important}
+@media(max-width:760px){.admin-authenticated>.admin-logout-button{position:relative;inset:auto;z-index:auto}.admin-upload-list li{grid-template-columns:76px 1fr auto}.admin-upload-thumb{width:76px;height:58px}}

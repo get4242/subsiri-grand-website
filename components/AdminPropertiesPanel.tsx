@@ -1,0 +1,95 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
+export type AdminPropertyRow = {
+  slug: string;
+  name: string;
+  location: string;
+  area: string;
+  price: string;
+  status: "พร้อมขาย" | "พร้อมโอน" | "sold";
+  eyebrow?: string;
+  description?: string;
+  titleDeed?: string;
+  roadAccess?: string;
+  electricity?: string;
+  mapUrl?: string;
+  youtubeUrl?: string;
+  images?: string[];
+  highlights?: string[];
+};
+
+type Props = {
+  properties: AdminPropertyRow[];
+  onChange: (properties: AdminPropertyRow[]) => void;
+};
+
+const blankProperty: AdminPropertyRow = {
+  slug: "", name: "", location: "", area: "", price: "", status: "พร้อมขาย",
+  eyebrow: "", description: "", titleDeed: "", roadAccess: "", electricity: "",
+  mapUrl: "", youtubeUrl: "", images: [], highlights: [],
+};
+
+export function AdminPropertiesPanel({ properties, onChange }: Props) {
+  const [editing, setEditing] = useState<AdminPropertyRow | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const save = async (property: AdminPropertyRow) => {
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch("/.netlify/functions/admin-properties", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(property),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.property) throw new Error(body.error || "ไม่สามารถบันทึกข้อมูลได้");
+      const next = properties.some((item) => item.slug === body.property.slug)
+        ? properties.map((item) => item.slug === body.property.slug ? body.property : item)
+        : [...properties, body.property];
+      onChange(next);
+      setEditing(null);
+      setMessage("บันทึกข้อมูลที่ดินเรียบร้อยแล้ว");
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : "ไม่สามารถบันทึกข้อมูลได้");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const value = (name: string) => String(form.get(name) || "").trim();
+    void save({
+      slug: value("slug"), name: value("name"), location: value("location"), area: value("area"),
+      price: value("price"), status: value("status") as AdminPropertyRow["status"],
+      eyebrow: value("eyebrow"), description: value("description"), titleDeed: value("titleDeed"),
+      roadAccess: value("roadAccess"), electricity: value("electricity"), mapUrl: value("mapUrl"),
+      youtubeUrl: value("youtubeUrl"),
+      images: value("images").split("\n").map((item) => item.trim()).filter(Boolean),
+      highlights: value("highlights").split("\n").map((item) => item.trim()).filter(Boolean),
+    });
+  };
+
+  const changeStatus = (property: AdminPropertyRow) => {
+    const status = property.status === "sold" ? "พร้อมขาย" : "sold";
+    void save({ ...property, status });
+  };
+
+  return <section className="admin-panel">
+    <div className="admin-panel-heading"><div><p>PROPERTY MANAGEMENT</p><h2>รายการที่ดิน</h2></div><button className="is-primary" type="button" onClick={() => { setMessage(""); setEditing({ ...blankProperty }); }}>＋ เพิ่มที่ดิน</button></div>
+    {message && <p className="admin-form-message" role="status">{message}</p>}
+    <div className="admin-table-wrap"><table><thead><tr><th>ชื่อแปลง</th><th>ทำเล</th><th>เนื้อที่</th><th>ราคา</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>{properties.map((property) => <tr key={property.slug}><td><strong>{property.name}</strong><small>/{property.slug}</small></td><td>{property.location}</td><td>{property.area}</td><td>{property.price}</td><td><span className={`admin-status ${property.status === "sold" ? "is-muted" : "is-progress"}`}>{property.status === "sold" ? "ขายแล้ว" : property.status}</span></td><td><div className="admin-row-actions"><button type="button" onClick={() => { setMessage(""); setEditing({ ...property }); }}>แก้ไข</button><button type="button" disabled={saving} onClick={() => changeStatus(property)}>{property.status === "sold" ? "เปิดขายอีกครั้ง" : "ตั้งเป็นขายแล้ว"}</button></div></td></tr>)}</tbody></table></div>
+
+    {editing && <div className="admin-editor-backdrop" role="presentation"><section className="admin-editor" role="dialog" aria-modal="true" aria-labelledby="property-editor-title"><div className="admin-panel-heading"><div><p>PROPERTY EDITOR</p><h2 id="property-editor-title">{editing.slug ? `แก้ไข ${editing.name}` : "เพิ่มที่ดิน"}</h2></div><button type="button" onClick={() => setEditing(null)}>ปิด</button></div><form onSubmit={submit}>
+      <div className="admin-form-grid"><label>Slug<input name="slug" defaultValue={editing.slug} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required readOnly={Boolean(editing.slug)}/></label><label>ชื่อแปลง<input name="name" defaultValue={editing.name} required/></label><label>ทำเล<input name="location" defaultValue={editing.location} required/></label><label>เนื้อที่<input name="area" defaultValue={editing.area} required/></label><label>ราคา<input name="price" defaultValue={editing.price} required/></label><label>สถานะ<select name="status" defaultValue={editing.status}><option value="พร้อมขาย">พร้อมขาย</option><option value="พร้อมโอน">พร้อมโอน</option><option value="sold">ขายแล้ว</option></select></label><label>ข้อความสั้น<input name="eyebrow" defaultValue={editing.eyebrow}/></label><label>โฉนด<input name="titleDeed" defaultValue={editing.titleDeed}/></label><label>ถนน<input name="roadAccess" defaultValue={editing.roadAccess}/></label><label>ไฟฟ้า<input name="electricity" defaultValue={editing.electricity}/></label><label>Google Maps<input name="mapUrl" type="url" defaultValue={editing.mapUrl}/></label><label>YouTube<input name="youtubeUrl" type="url" defaultValue={editing.youtubeUrl}/></label></div>
+      <label>รายละเอียด<textarea name="description" defaultValue={editing.description} rows={4}/></label><label>จุดเด่น — หนึ่งรายการต่อบรรทัด<textarea name="highlights" defaultValue={editing.highlights?.join("\n")} rows={4}/></label><label>ลิงก์รูป — หนึ่งลิงก์ต่อบรรทัด<textarea name="images" defaultValue={editing.images?.join("\n")} rows={5}/></label>
+      <div className="admin-editor-actions"><button type="button" onClick={() => setEditing(null)}>ยกเลิก</button><button className="is-primary" type="submit" disabled={saving}>{saving ? "กำลังบันทึก…" : "บันทึกข้อมูล"}</button></div>
+    </form></section></div>}
+  </section>;
+}

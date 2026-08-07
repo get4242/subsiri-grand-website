@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AdminPropertiesPanel, type AdminPropertyRow } from "@/components/AdminPropertiesPanel";
 
 type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customers" | "promotions" | "settings";
-type PropertyRow = { slug: string; name: string; location: string; area: string; price: string; status: "พร้อมขาย" | "พร้อมโอน" | "sold" };
+type PropertyRow = AdminPropertyRow;
 type ServiceRow = { number: string; title: string; note: string };
 type ArticleRow = { slug: string; title: string; category: string; publishedAt: string };
 
@@ -39,8 +40,21 @@ function StatusPill({ status }: { status: string }) {
 export function AdminDashboard({ properties, services, articles }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [notice, setNotice] = useState("");
-  const available = useMemo(() => properties.filter((item) => item.status !== "sold").length, [properties]);
-  const sold = properties.length - available;
+  const [propertyRows, setPropertyRows] = useState(properties);
+  const [dataMode, setDataMode] = useState<"loading" | "connected" | "fallback">("loading");
+  const available = useMemo(() => propertyRows.filter((item) => item.status !== "sold").length, [propertyRows]);
+  const sold = propertyRows.length - available;
+
+  useEffect(() => {
+    fetch("/.netlify/functions/admin-properties", { credentials: "same-origin", cache: "no-store" })
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(body.properties)) throw new Error("not connected");
+        if (body.properties.length > 0) setPropertyRows(body.properties);
+        setDataMode("connected");
+      })
+      .catch(() => setDataMode("fallback"));
+  }, []);
 
   const uiOnly = (message: string) => {
     setNotice(`${message} — ปุ่มนี้เป็น UI ตัวอย่างและยังไม่บันทึกข้อมูล`);
@@ -55,19 +69,21 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
     </aside>
 
     <div className="admin-main">
-      <div className="admin-demo-alert" role="status"><strong>โหมดตัวอย่าง</strong><span>— ยังไม่เชื่อม Google Sheets และยังไม่มีระบบเข้าสู่ระบบ</span></div>
+      <div className="admin-demo-alert" role="status"><strong>{dataMode === "connected" ? "เชื่อมต่อแล้ว" : "โหมดสำรอง"}</strong><span>{dataMode === "loading" ? "— กำลังโหลดข้อมูล Google Sheets" : dataMode === "connected" ? "— เข้าสู่ระบบแล้ว และกำลังใช้ข้อมูลจาก Google Sheets" : "— เข้าสู่ระบบแล้ว แต่ยังใช้ข้อมูลในเว็บไซต์จนกว่าจะตั้งค่า Apps Script"}</span></div>
       <header className="admin-topbar"><div><p>SUBSIRI GRAND GROUP</p><h1>{tabs.find((tab) => tab.id === activeTab)?.label}</h1></div><div className="admin-profile"><span>ผด</span><div><strong>ผู้ดูแลระบบ</strong><small>ข้อมูลจำลอง</small></div></div></header>
 
       <main className="admin-content">
         {activeTab === "dashboard" && <>
           <section className="admin-summary" aria-label="ข้อมูลสรุป">
-            {[{ label: "ที่ดินพร้อมขาย", value: available, note: `จากทั้งหมด ${properties.length} แปลง` }, { label: "ขายแล้ว", value: sold, note: "สถานะจากข้อมูลตัวอย่าง" }, { label: "ลีดใหม่", value: 7, note: "รอติดต่อกลับ 3 ราย" }, { label: "บทความ", value: articles.length, note: "เผยแพร่ในเว็บไซต์" }].map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.note}</small></article>)}
+            {[{ label: "ที่ดินพร้อมขาย", value: available, note: `จากทั้งหมด ${propertyRows.length} แปลง` }, { label: "ขายแล้ว", value: sold, note: "สถานะจากข้อมูลปัจจุบัน" }, { label: "ลีดใหม่", value: 7, note: "รอติดต่อกลับ 3 ราย" }, { label: "บทความ", value: articles.length, note: "เผยแพร่ในเว็บไซต์" }].map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.note}</small></article>)}
           </section>
           <section className="admin-panel"><div className="admin-panel-heading"><div><p>RECENT LEADS</p><h2>ลูกค้าที่ต้องติดตาม</h2></div><button type="button" onClick={() => setActiveTab("customers")}>ดูทั้งหมด</button></div><CustomerTable /></section>
-          <div className="admin-dashboard-grid"><section className="admin-panel"><div className="admin-panel-heading"><div><p>PROPERTY STATUS</p><h2>สถานะที่ดิน</h2></div></div><div className="admin-progress"><div><span>พร้อมขาย</span><strong>{available}</strong></div><progress max={Math.max(properties.length, 1)} value={available}/><div><span>ขายแล้ว</span><strong>{sold}</strong></div><progress max={Math.max(properties.length, 1)} value={sold}/></div></section><section className="admin-panel"><div className="admin-panel-heading"><div><p>QUICK ACTIONS</p><h2>เมนูลัด</h2></div></div><div className="admin-quick-actions"><button type="button" onClick={() => { setActiveTab("properties"); uiOnly("เปิดฟอร์มเพิ่มที่ดิน"); }}>＋ เพิ่มที่ดิน</button><button type="button" onClick={() => setActiveTab("articles")}>▤ จัดการบทความ</button><button type="button" onClick={() => setActiveTab("promotions")}>％ ตั้งค่าโปรโมชั่น</button></div></section></div>
+          <div className="admin-dashboard-grid"><section className="admin-panel"><div className="admin-panel-heading"><div><p>PROPERTY STATUS</p><h2>สถานะที่ดิน</h2></div></div><div className="admin-progress"><div><span>พร้อมขาย</span><strong>{available}</strong></div><progress max={Math.max(propertyRows.length, 1)} value={available}/><div><span>ขายแล้ว</span><strong>{sold}</strong></div><progress max={Math.max(propertyRows.length, 1)} value={sold}/></div></section><section className="admin-panel"><div className="admin-panel-heading"><div><p>QUICK ACTIONS</p><h2>เมนูลัด</h2></div></div><div className="admin-quick-actions"><button type="button" onClick={() => { setActiveTab("properties"); uiOnly("เปิดฟอร์มเพิ่มที่ดิน"); }}>＋ เพิ่มที่ดิน</button><button type="button" onClick={() => setActiveTab("articles")}>▤ จัดการบทความ</button><button type="button" onClick={() => setActiveTab("promotions")}>％ ตั้งค่าโปรโมชั่น</button></div></section></div>
         </>}
 
-        {activeTab === "properties" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>PROPERTY MANAGEMENT</p><h2>รายการที่ดิน</h2></div><button className="is-primary" type="button" onClick={() => uiOnly("เปิดฟอร์มเพิ่มที่ดิน")}>＋ เพิ่มที่ดิน</button></div><div className="admin-table-wrap"><table><thead><tr><th>ชื่อแปลง</th><th>ทำเล</th><th>เนื้อที่</th><th>ราคา</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>{properties.map((property) => <tr key={property.slug}><td><strong>{property.name}</strong><small>/{property.slug}</small></td><td>{property.location}</td><td>{property.area}</td><td>{property.price}</td><td><StatusPill status={property.status}/></td><td><div className="admin-row-actions"><button type="button" onClick={() => uiOnly(`แก้ไข ${property.name}`)}>แก้ไข</button><button type="button" onClick={() => uiOnly(`เปลี่ยนสถานะ ${property.name}`)}>เปลี่ยนสถานะ</button></div></td></tr>)}</tbody></table></div></section>}
+        {activeTab === "properties" && (
+          <AdminPropertiesPanel properties={propertyRows} onChange={setPropertyRows} />
+        )}
 
         {activeTab === "services" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>SERVICES</p><h2>บริการของบริษัท</h2></div></div><div className="admin-card-list">{services.map((service) => <article key={service.number}><span>{service.number}</span><div><h3>{service.title}</h3><p>{service.note}</p></div><button type="button" onClick={() => uiOnly(`แก้ไขบริการ ${service.title}`)}>แก้ไข</button></article>)}</div></section>}
 

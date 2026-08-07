@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AdminPropertiesPanel, type AdminPropertyRow } from "@/components/AdminPropertiesPanel";
 import { AdminLeadsPanel, type AdminLead } from "@/components/AdminLeadsPanel";
 import { AdminContentManager, type AdminContentRecord } from "@/components/AdminContentManager";
+import { AdminContactSettings } from "@/components/AdminContactSettings";
 import { mergeBySlug } from "@/lib/cms-data";
 
 type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customers" | "promotions" | "settings";
@@ -28,11 +29,6 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: "promotions", label: "โปรโมชั่น", icon: "％" },
   { id: "settings", label: "ตั้งค่า", icon: "⚙" },
 ];
-
-function StatusPill({ status }: { status: string }) {
-  const tone = status === "sold" ? "muted" : status === "ติดต่อใหม่" ? "new" : ["นัดหมายแล้ว", "เชื่อมต่อแล้ว", "พร้อมใช้งาน"].includes(status) ? "success" : "progress";
-  return <span className={`admin-status is-${tone}`}>{status === "sold" ? "ขายแล้ว" : status}</span>;
-}
 
 export function AdminDashboard({ properties, services, articles }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
@@ -104,7 +100,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
 
         {activeTab === "promotions" && <AdminContentManager kind="promotions" initial={[{ slug: "homepage-popup", title: "ปรึกษาข้อมูลที่ดินเบื้องต้น", description: "แจ้งทำเล ขนาดพื้นที่ และวัตถุประสงค์ ทีมงานพร้อมรับฟัง", eyebrow: "SPECIAL UPDATE", ctaLabel: "ติดต่อทีมงาน", ctaHref: "/contact", enabled: true }]}/>}
 
-        {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><label>ชื่อบริษัท<input value="บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" readOnly/></label><label>เบอร์โทร<input value="090-249-1459" readOnly/></label><label>อีเมล<input value="contact@subsiri.co.th" readOnly/></label><p className="admin-settings-note">ข้อมูลติดต่อหลักอ่านจากค่ากลางของเว็บไซต์ เพื่อป้องกันข้อมูลแต่ละหน้าต่างกัน</p></article><article className="admin-panel"><p>INTEGRATIONS</p><h2>การเชื่อมต่อ</h2><p className="admin-settings-note">URL และรหัสเชื่อมต่อเป็นค่าฝั่งเซิร์ฟเวอร์ของ Netlify จึงไม่ควรวางรหัสลับในหน้าเว็บ ระบบจะตรวจสถานะให้อัตโนมัติ</p><div className="admin-integration"><span>Google Sheets / Apps Script</span><StatusPill status={integrations.googleSheets ? "เชื่อมต่อแล้ว" : "ยังไม่เชื่อมต่อ"}/></div><div className="admin-integration"><span>LINE OA</span><StatusPill status={integrations.lineOA ? "เชื่อมต่อแล้ว" : "ยังไม่เชื่อมต่อ"}/></div><div className="admin-integration"><span>ระบบเข้าสู่ระบบ</span><StatusPill status={integrations.login ? "พร้อมใช้งาน" : "ยังไม่พร้อม"}/></div><div className="admin-integration"><span>คลังรูป Netlify Blobs</span><StatusPill status={integrations.imageUploads ? "พร้อมใช้งาน" : "ยังไม่พร้อม"}/></div><a className="admin-integration-link" href="https://app.netlify.com/projects/subsiri/configuration/env" target="_blank" rel="noreferrer">เปลี่ยน URL หรือรหัสเชื่อมต่อใน Netlify ↗</a><p className="admin-settings-note">เปลี่ยน Apps Script ที่ตัวแปร <code>GOOGLE_APPS_SCRIPT_URL</code> ส่วน LINE ใช้ <code>LINE_CHANNEL_ACCESS_TOKEN</code> และ <code>LINE_TARGET_ID</code> รูปภาพจัดเก็บใน Netlify Blobs โดยไม่ต้องตั้งค่า Google Drive</p></article></section>}
+        {activeTab === "settings" && <section className="admin-settings-grid"><article className="admin-panel admin-company-card"><p>COMPANY PROFILE</p><h2>ข้อมูลบริษัท</h2><div className="admin-company-detail"><span>บริษัท</span><strong>บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด</strong></div><div className="admin-company-detail"><span>โทรศัพท์</span><strong>090-249-1459</strong></div><div className="admin-company-detail"><span>อีเมล</span><strong>contact@subsiri.co.th</strong></div><div className="admin-system-summary"><span className={integrations.googleSheets ? "is-ready" : ""}>● ข้อมูลเว็บไซต์</span><span className={integrations.imageUploads ? "is-ready" : ""}>● คลังรูป</span><span className={integrations.login ? "is-ready" : ""}>● ระบบผู้ดูแล</span></div></article><AdminContactSettings/></section>}
       </main>
       {notice && <div className="admin-toast" role="status">{notice}</div>}
     </div>

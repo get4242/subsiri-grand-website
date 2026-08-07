@@ -1,0 +1,12 @@
+"use client";
+import { FormEvent, useEffect, useState } from "react";
+
+type Settings = { lineUrl: string; facebookUrl: string };
+const initial: Settings = { lineUrl: "https://lin.ee/r8WhnWC", facebookUrl: "" };
+
+export function AdminContactSettings() {
+  const [settings, setSettings] = useState(initial); const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");
+  useEffect(() => { fetch("/.netlify/functions/admin-contact-settings", { credentials: "same-origin", cache: "no-store" }).then(async (response) => { const body = await response.json(); if (response.ok && body.settings) setSettings(body.settings); }).catch(() => setMessage("ไม่สามารถโหลดลิงก์ล่าสุดได้")); }, []);
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSaving(true); setMessage(""); try { const response = await fetch("/.netlify/functions/admin-contact-settings", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body.error || "บันทึกไม่สำเร็จ"); setSettings(body.settings); setMessage("บันทึกลิงก์เรียบร้อยแล้ว เว็บไซต์จะใช้ลิงก์ใหม่นี้ทันที"); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "บันทึกไม่สำเร็จ"); } finally { setSaving(false); } };
+  return <article className="admin-panel admin-social-settings"><p>CONTACT CHANNELS</p><h2>ช่องทางโซเชียล</h2><p className="admin-settings-lead">แก้ไขเฉพาะลิงก์ที่ลูกค้าจะกดจากหน้าเว็บไซต์</p><form onSubmit={submit}><label><span className="admin-social-brand is-line">LINE</span><strong>ลิงก์ LINE Official Account</strong><input type="url" value={settings.lineUrl} onChange={(event) => setSettings({ ...settings, lineUrl: event.target.value })} placeholder="https://lin.ee/..." required/><small>รองรับลิงก์ lin.ee หรือ line.me</small></label><label><span className="admin-social-brand is-facebook">f</span><strong>ลิงก์เพจ Facebook</strong><input type="url" value={settings.facebookUrl} onChange={(event) => setSettings({ ...settings, facebookUrl: event.target.value })} placeholder="https://www.facebook.com/..."/><small>ถ้ายังไม่มีลิงก์ ให้เว้นว่าง ปุ่ม Facebook จะแสดงสถานะรอเพิ่มลิงก์</small></label><button type="submit" disabled={saving}>{saving ? "กำลังบันทึก…" : "บันทึกลิงก์โซเชียล"}</button>{message && <p className="admin-social-message" role="status">{message}</p>}</form></article>;
+}

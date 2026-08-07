@@ -15,6 +15,10 @@ export type AdminContentRecord = {
 const labels = { services: { title: "บริการของบริษัท", add: "เพิ่มบริการ" }, articles: { title: "บทความ", add: "เขียนบทความ" }, promotions: { title: "โปรโมชั่นบนเว็บไซต์", add: "สร้างโปรโมชั่น" } };
 const toLines = (items?: { title: string; description: string }[]) => items?.map((item) => `${item.title} | ${item.description}`).join("\n") ?? "";
 const parseLines = (value: string) => value.split("\n").map((line) => { const [title, ...rest] = line.split("|"); return { title: title.trim(), description: rest.join("|").trim() }; }).filter((item) => item.title);
+const automaticSlug = (title: string, kind: AdminContentKind) => {
+  const latin = title.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  return latin || `${kind === "services" ? "service" : kind === "articles" ? "article" : "promotion"}-${Date.now()}`;
+};
 
 export function AdminContentManager({ kind, initial }: { kind: AdminContentKind; initial: AdminContentRecord[] }) {
   const [records, setRecords] = useState(initial); const [editing, setEditing] = useState<AdminContentRecord | null>(null);
@@ -27,7 +31,8 @@ export function AdminContentManager({ kind, initial }: { kind: AdminContentKind;
   };
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); const form = new FormData(event.currentTarget); const val = (name: string) => String(form.get(name) || "").trim();
-    const base: AdminContentRecord = { ...editing, slug: val("slug"), title: val("title"), description: val("description"), enabled: form.get("enabled") === "on" };
+    const title = val("title");
+    const base: AdminContentRecord = { ...editing, slug: editing?.slug || automaticSlug(title, kind), title, description: val("description"), enabled: form.get("enabled") === "on" };
     if (kind === "services") Object.assign(base, { number: val("number"), note: val("note"), href: val("href"), image: val("image"), imageAlt: val("imageAlt"), scopeTitle: val("scopeTitle"), scope: parseLines(val("scope")), steps: parseLines(val("steps")), price: val("price"), priceNote: val("priceNote"), disclaimer: val("disclaimer") });
     if (kind === "articles") Object.assign(base, { category: val("category"), excerpt: val("excerpt"), publishedAt: val("publishedAt"), readingTime: val("readingTime"), coverImage: val("coverImage"), coverImageAlt: val("coverImageAlt"), paragraphs: val("paragraphs").split("\n\n").map((p) => p.trim()).filter(Boolean) });
     if (kind === "promotions") Object.assign(base, { eyebrow: val("eyebrow"), ctaLabel: val("ctaLabel"), ctaHref: val("ctaHref") });

@@ -22,10 +22,11 @@ export function normalizePublicProperty(value: unknown): Property | null {
   const slug = string("slug"); const name = string("name"); const location = string("location");
   if (!slug || !name || !location) return null;
   const images = Array.isArray(item.images) ? item.images.filter((entry): entry is string => typeof entry === "string" && Boolean(entry)) : [];
+  const eyebrow = string("eyebrow");
   return {
     slug, name, location, area: string("area"), price: string("price"),
     province: string("province") || provinceFromLocation(location), titleDeed: string("titleDeed") || "กรุณาสอบถามทีมงาน",
-    eyebrow: string("eyebrow") || "ที่ดินจากรายการปัจจุบัน", description: string("description"),
+    eyebrow: eyebrow === name ? "" : eyebrow, description: string("description"),
     highlights: Array.isArray(item.highlights) ? item.highlights.filter((entry): entry is string => typeof entry === "string") : [],
     status: (["พร้อมขาย", "พร้อมโอน", "sold"].includes(string("status")) ? string("status") : "พร้อมขาย") as Property["status"],
     image: images[0] || string("image") || "/temporary/services/property-ai-temporary.png", images: images.length ? images : ["/temporary/services/property-ai-temporary.png"],

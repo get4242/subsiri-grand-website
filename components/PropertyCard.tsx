@@ -10,7 +10,7 @@ export function PropertyCard({ property }: { property: Property }) {
       <span className={`status${isSold ? " sold-badge" : ""}`}>{isSold ? "SOLD OUT" : property.status}</span>
     </div>
     <div className="property-body">
-      <p className="micro">{property.eyebrow}</p><h3>{property.name}</h3><p className="location">⌖ {property.location}</p>
+      {property.eyebrow && property.eyebrow !== property.name && <p className="micro">{property.eyebrow}</p>}<h3>{property.name}</h3><p className="location">⌖ {property.location}</p>
       <div className="property-meta"><span><small>ขนาด</small>{property.area}</span><span><small>ราคา</small>{property.price}</span></div>
       {isSold && <p className="card-sold-note">แปลงนี้ขายแล้ว</p>}
       <Link className="text-link" href={`/land/${property.slug}`}>ดูรายละเอียด <span>→</span></Link>

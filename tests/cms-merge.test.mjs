@@ -10,7 +10,8 @@ test("sheet records override matching static records without removing untouched 
 });
 
 test("public property derives province and cover image safely", () => {
-  const value = normalizePublicProperty({ slug: "land", name: "ที่ดิน", location: "อ.เมือง จ.เชียงใหม่", area: "1 ไร่", price: "1 บาท", status: "พร้อมขาย", images: ["/one.jpg"] });
+  const value = normalizePublicProperty({ slug: "land", name: "ที่ดิน", eyebrow: "ที่ดิน", location: "อ.เมือง จ.เชียงใหม่", area: "1 ไร่", price: "1 บาท", status: "พร้อมขาย", images: ["/one.jpg"] });
   assert.equal(value?.province, "เชียงใหม่");
   assert.equal(value?.image, "/one.jpg");
+  assert.equal(value?.eyebrow, "");
 });

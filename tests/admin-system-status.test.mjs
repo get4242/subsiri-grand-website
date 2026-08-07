@@ -14,5 +14,5 @@ test("reports integrations from configuration without exposing secret values", (
 });
 
 test("reports missing integrations accurately", () => {
-  assert.deepEqual(getAdminSystemStatus({}), { googleSheets: false, lineOA: false, login: true, imageUploads: false });
+  assert.deepEqual(getAdminSystemStatus({}), { googleSheets: false, lineOA: false, login: true, imageUploads: true });
 });

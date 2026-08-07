@@ -70,17 +70,70 @@ function validateLead(input: LeadInput): { lead?: LeadRecord; error?: string } {
   };
 }
 
-function formatLineMessage(lead: LeadRecord) {
-  return [
-    "มี Lead ใหม่จากเว็บไซต์ทรัพย์สิริ",
-    `ชื่อ: ${lead.name}`,
-    `โทร: ${lead.phone}`,
-    `อีเมล: ${lead.email || "ไม่ระบุ"}`,
-    `สนใจ: ${lead.interest}`,
-    `ข้อความ: ${lead.message}`,
-    `หน้าเว็บ: ${lead.sourceUrl || "ไม่ระบุ"}`,
-    `เวลา: ${lead.timestamp}`,
-  ].join("\n").slice(0, 4900);
+function formatThaiTimestamp(timestamp: string) {
+  return new Intl.DateTimeFormat("th-TH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Bangkok",
+  }).format(new Date(timestamp));
+}
+
+function lineDetailRow(label: string, value: string) {
+  return {
+    type: "box",
+    layout: "baseline",
+    spacing: "sm",
+    contents: [
+      { type: "text", text: label, color: "#9A7A3A", size: "sm", weight: "bold", flex: 2 },
+      { type: "text", text: value, color: "#172B3A", size: "sm", wrap: true, flex: 5 },
+    ],
+  };
+}
+
+function buildLineMessage(lead: LeadRecord) {
+  return {
+    type: "flex",
+    altText: `มีลูกค้าใหม่จากเว็บไซต์: ${lead.name}`,
+    contents: {
+      type: "bubble",
+      styles: {
+        header: { backgroundColor: "#071B2B" },
+        footer: { separator: true, separatorColor: "#D8C28F" },
+      },
+      header: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "20px",
+        contents: [
+          { type: "text", text: "มีลูกค้าใหม่จากเว็บไซต์", color: "#D8B968", size: "lg", weight: "bold", wrap: true },
+          { type: "text", text: "ทรัพย์สิริ แกรนด์ กรุ๊ป", color: "#FFFFFF", size: "xs", margin: "sm" },
+        ],
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        spacing: "md",
+        paddingAll: "20px",
+        contents: [
+          lineDetailRow("ชื่อ", lead.name),
+          lineDetailRow("โทร", lead.phone),
+          lineDetailRow("อีเมล", lead.email || "ไม่ระบุ"),
+          lineDetailRow("สนใจ", lead.interest),
+          { type: "separator", color: "#E8DFC9", margin: "md" },
+          { type: "text", text: "ข้อความจากลูกค้า", color: "#9A7A3A", size: "xs", weight: "bold" },
+          { type: "text", text: lead.message, color: "#172B3A", size: "sm", wrap: true },
+        ],
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "14px",
+        contents: [
+          { type: "text", text: `รับข้อมูลเมื่อ ${formatThaiTimestamp(lead.timestamp)} น.`, color: "#7A8791", size: "xs", align: "center" },
+        ],
+      },
+    },
+  };
 }
 
 export default async function submitLead(request: Request) {
@@ -138,7 +191,7 @@ export default async function submitLead(request: Request) {
       },
       body: JSON.stringify({
         to: lineTarget,
-        messages: [{ type: "text", text: formatLineMessage(lead) }],
+        messages: [buildLineMessage(lead)],
       }),
     });
 

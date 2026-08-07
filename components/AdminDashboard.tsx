@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPropertiesPanel, type AdminPropertyRow } from "@/components/AdminPropertiesPanel";
+import { AdminLeadsPanel, type AdminLead } from "@/components/AdminLeadsPanel";
 
 type AdminTab = "dashboard" | "properties" | "services" | "articles" | "customers" | "promotions" | "settings";
 type PropertyRow = AdminPropertyRow;
@@ -25,13 +26,6 @@ const tabs: { id: AdminTab; label: string; icon: string }[] = [
   { id: "settings", label: "ตั้งค่า", icon: "⚙" },
 ];
 
-const mockCustomers = [
-  { name: "คุณพิมพ์ชนก", interest: "ที่ดินสามร้อยยอด", phone: "090-xxx-2481", status: "ติดต่อใหม่", date: "วันนี้ 10:24" },
-  { name: "คุณวรเมธ", interest: "ดูฮวงจุ้ยโครงการ", phone: "081-xxx-9570", status: "กำลังติดตาม", date: "เมื่อวาน 16:40" },
-  { name: "คุณสุภาวดี", interest: "ตั้งศาลพระภูมิ", phone: "089-xxx-4302", status: "นัดหมายแล้ว", date: "4 ส.ค. 2569" },
-  { name: "คุณกิตติ", interest: "ที่ดินรามอินทรา 58", phone: "086-xxx-7128", status: "รอข้อมูลเพิ่ม", date: "3 ส.ค. 2569" },
-];
-
 function StatusPill({ status }: { status: string }) {
   const tone = status === "sold" ? "muted" : status === "ติดต่อใหม่" ? "new" : status === "นัดหมายแล้ว" ? "success" : "progress";
   return <span className={`admin-status is-${tone}`}>{status === "sold" ? "ขายแล้ว" : status}</span>;
@@ -42,6 +36,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
   const [notice, setNotice] = useState("");
   const [propertyRows, setPropertyRows] = useState(properties);
   const [dataMode, setDataMode] = useState<"loading" | "connected" | "fallback">("loading");
+  const [leads, setLeads] = useState<AdminLead[]>([]);
   const available = useMemo(() => propertyRows.filter((item) => item.status !== "sold").length, [propertyRows]);
   const sold = propertyRows.length - available;
 
@@ -54,6 +49,12 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
         setDataMode("connected");
       })
       .catch(() => setDataMode("fallback"));
+  }, []);
+
+  useEffect(() => {
+    fetch("/.netlify/functions/admin-leads", { credentials: "same-origin", cache: "no-store" })
+      .then(async (response) => { const body = await response.json().catch(() => ({})); if (!response.ok || !Array.isArray(body.leads)) throw new Error(); setLeads(body.leads); })
+      .catch(() => setLeads([]));
   }, []);
 
   const uiOnly = (message: string) => {
@@ -75,9 +76,9 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
       <main className="admin-content">
         {activeTab === "dashboard" && <>
           <section className="admin-summary" aria-label="ข้อมูลสรุป">
-            {[{ label: "ที่ดินพร้อมขาย", value: available, note: `จากทั้งหมด ${propertyRows.length} แปลง` }, { label: "ขายแล้ว", value: sold, note: "สถานะจากข้อมูลปัจจุบัน" }, { label: "ลีดใหม่", value: 7, note: "รอติดต่อกลับ 3 ราย" }, { label: "บทความ", value: articles.length, note: "เผยแพร่ในเว็บไซต์" }].map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.note}</small></article>)}
+            {[{ label: "ที่ดินพร้อมขาย", value: available, note: `จากทั้งหมด ${propertyRows.length} แปลง` }, { label: "ขายแล้ว", value: sold, note: "สถานะจากข้อมูลปัจจุบัน" }, { label: "ลีดใหม่", value: leads.filter((lead) => !lead.status || lead.status === "ใหม่").length, note: `จากลูกค้าทั้งหมด ${leads.length} ราย` }, { label: "บทความ", value: articles.length, note: "เผยแพร่ในเว็บไซต์" }].map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><small>{item.note}</small></article>)}
           </section>
-          <section className="admin-panel"><div className="admin-panel-heading"><div><p>RECENT LEADS</p><h2>ลูกค้าที่ต้องติดตาม</h2></div><button type="button" onClick={() => setActiveTab("customers")}>ดูทั้งหมด</button></div><CustomerTable /></section>
+          <section className="admin-panel"><div className="admin-panel-heading"><div><p>RECENT LEADS</p><h2>ลูกค้าที่ต้องติดตาม</h2></div><button type="button" onClick={() => setActiveTab("customers")}>ดูทั้งหมด</button></div><AdminLeadsPanel leads={leads} compact onChange={setLeads}/></section>
           <div className="admin-dashboard-grid"><section className="admin-panel"><div className="admin-panel-heading"><div><p>PROPERTY STATUS</p><h2>สถานะที่ดิน</h2></div></div><div className="admin-progress"><div><span>พร้อมขาย</span><strong>{available}</strong></div><progress max={Math.max(propertyRows.length, 1)} value={available}/><div><span>ขายแล้ว</span><strong>{sold}</strong></div><progress max={Math.max(propertyRows.length, 1)} value={sold}/></div></section><section className="admin-panel"><div className="admin-panel-heading"><div><p>QUICK ACTIONS</p><h2>เมนูลัด</h2></div></div><div className="admin-quick-actions"><button type="button" onClick={() => { setActiveTab("properties"); uiOnly("เปิดฟอร์มเพิ่มที่ดิน"); }}>＋ เพิ่มที่ดิน</button><button type="button" onClick={() => setActiveTab("articles")}>▤ จัดการบทความ</button><button type="button" onClick={() => setActiveTab("promotions")}>％ ตั้งค่าโปรโมชั่น</button></div></section></div>
         </>}
 
@@ -89,7 +90,7 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
 
         {activeTab === "articles" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>CONTENT</p><h2>บทความ</h2></div><button className="is-primary" type="button" onClick={() => uiOnly("สร้างบทความใหม่")}>＋ เขียนบทความ</button></div><div className="admin-table-wrap"><table><thead><tr><th>หัวข้อ</th><th>หมวดหมู่</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>{articles.map((article) => <tr key={article.slug}><td><strong>{article.title}</strong><small>/{article.slug}</small></td><td>{article.category}</td><td><StatusPill status="เผยแพร่แล้ว"/></td><td><button className="admin-text-button" type="button" onClick={() => uiOnly(`แก้ไขบทความ ${article.title}`)}>แก้ไข</button></td></tr>)}</tbody></table></div></section>}
 
-        {activeTab === "customers" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>LEAD PIPELINE</p><h2>ลูกค้าและการติดตาม</h2></div><button type="button" onClick={() => uiOnly("ส่งออกรายชื่อลูกค้า")}>ส่งออก</button></div><CustomerTable actions onAction={uiOnly}/></section>}
+        {activeTab === "customers" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>LEAD PIPELINE</p><h2>ลูกค้าและการติดตาม</h2></div></div><AdminLeadsPanel leads={leads} onChange={setLeads}/></section>}
 
         {activeTab === "promotions" && <section className="admin-panel"><div className="admin-panel-heading"><div><p>PROMOTIONS</p><h2>โปรโมชั่นบนเว็บไซต์</h2></div><button className="is-primary" type="button" onClick={() => uiOnly("สร้างโปรโมชั่น")}>＋ สร้างโปรโมชั่น</button></div><div className="admin-empty-card"><span>％</span><h3>โปรโมชันปรึกษาข้อมูลที่ดินเบื้องต้น</h3><p>ตัวอย่าง popup ที่แสดงอยู่บนหน้าบ้าน ปัจจุบันเป็นข้อมูลจาก config ในโค้ด</p><StatusPill status="เปิดใช้งาน"/><button type="button" onClick={() => uiOnly("แก้ไขโปรโมชั่น")}>แก้ไขตัวอย่าง</button></div></section>}
 
@@ -98,8 +99,4 @@ export function AdminDashboard({ properties, services, articles }: AdminDashboar
       {notice && <div className="admin-toast" role="status">{notice}</div>}
     </div>
   </div>;
-}
-
-function CustomerTable({ actions = false, onAction = () => {} }: { actions?: boolean; onAction?: (message: string) => void }) {
-  return <div className="admin-table-wrap"><table><thead><tr><th>ลูกค้า</th><th>สนใจ</th><th>โทรศัพท์</th><th>สถานะติดตาม</th><th>อัปเดต</th>{actions && <th>จัดการ</th>}</tr></thead><tbody>{mockCustomers.map((customer) => <tr key={customer.phone}><td><strong>{customer.name}</strong></td><td>{customer.interest}</td><td>{customer.phone}</td><td><StatusPill status={customer.status}/></td><td>{customer.date}</td>{actions && <td><button className="admin-text-button" type="button" onClick={() => onAction(`อัปเดตการติดตาม ${customer.name}`)}>อัปเดต</button></td>}</tr>)}</tbody></table></div>;
 }

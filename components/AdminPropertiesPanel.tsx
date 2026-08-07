@@ -26,6 +26,14 @@ type Props = {
   onChange: (properties: AdminPropertyRow[]) => void;
 };
 
+type UploadItem = {
+  id: string;
+  name: string;
+  preview: string;
+  status: "uploading" | "success" | "error";
+  error?: string;
+};
+
 const blankProperty: AdminPropertyRow = {
   slug: "", name: "", location: "", area: "", price: "", status: "พร้อมขาย",
   eyebrow: "", description: "", titleDeed: "", roadAccess: "", electricity: "",
@@ -37,35 +45,50 @@ export function AdminPropertiesPanel({ properties, onChange }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [imageValues, setImageValues] = useState<string[]>([]);
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
 
   const openEditor = (property: AdminPropertyRow) => {
     setMessage("");
     setEditing({ ...property });
     setImageValues(property.images ?? []);
+    setUploads([]);
   };
 
   const uploadImages = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = [...(event.target.files ?? [])];
     if (!files.length) return;
-    setSaving(true); setMessage("กำลังอัปโหลดรูป…");
-    try {
-      const uploaded: string[] = [];
-      for (const file of files) {
-        const data = await new Promise<string>((resolve, reject) => {
+    setSaving(true); setMessage(`กำลังอัปโหลด ${files.length} รูป กรุณาอย่าปิดหน้าต่างนี้`);
+    let successCount = 0;
+    let errorCount = 0;
+    for (const file of files) {
+      const id = `${Date.now()}-${file.name}-${Math.random()}`;
+      try {
+        if (file.size > 5_000_000) throw new Error("ไฟล์ใหญ่เกิน 5 MB กรุณาลดขนาดรูปก่อน");
+        const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+          reader.onload = () => resolve(String(reader.result));
           reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
           reader.readAsDataURL(file);
         });
+        setUploads((current) => [...current, { id, name: file.name, preview: dataUrl, status: "uploading" }]);
+        const data = dataUrl.split(",")[1] || "";
         const response = await fetch("/.netlify/functions/admin-upload", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, mimeType: file.type, data, folder: editing?.slug || "new-property" }) });
         const body = await response.json().catch(() => ({}));
         if (!response.ok || !body.url) throw new Error(body.error || "อัปโหลดรูปไม่สำเร็จ");
-        uploaded.push(body.url);
+        setImageValues((current) => [...current, body.url]);
+        setUploads((current) => current.map((item) => item.id === id ? { ...item, status: "success" } : item));
+        successCount += 1;
+      } catch (reason) {
+        const error = reason instanceof Error ? reason.message : "อัปโหลดรูปไม่สำเร็จ";
+        const fallbackPreview = URL.createObjectURL(file);
+        setUploads((current) => current.some((item) => item.id === id)
+          ? current.map((item) => item.id === id ? { ...item, status: "error", error } : item)
+          : [...current, { id, name: file.name, preview: fallbackPreview, status: "error", error }]);
+        errorCount += 1;
       }
-      setImageValues((current) => [...current, ...uploaded]);
-      setMessage(`อัปโหลดรูปแล้ว ${uploaded.length} รูป กรุณากดบันทึกข้อมูล`);
-    } catch (reason) { setMessage(reason instanceof Error ? reason.message : "อัปโหลดรูปไม่สำเร็จ"); }
-    finally { setSaving(false); event.target.value = ""; }
+    }
+    setMessage(errorCount ? `อัปโหลดสำเร็จ ${successCount} รูป ไม่สำเร็จ ${errorCount} รูป — ดูสาเหตุใต้ภาพ` : `อัปโหลดสำเร็จ ${successCount} รูป กรุณากดบันทึกข้อมูลด้านล่าง`);
+    setSaving(false); event.target.value = "";
   };
 
   const save = async (property: AdminPropertyRow) => {
@@ -121,7 +144,7 @@ export function AdminPropertiesPanel({ properties, onChange }: Props) {
     {editing && <div className="admin-editor-backdrop" role="presentation"><section className="admin-editor" role="dialog" aria-modal="true" aria-labelledby="property-editor-title"><div className="admin-panel-heading"><div><p>PROPERTY EDITOR</p><h2 id="property-editor-title">{editing.slug ? `แก้ไข ${editing.name}` : "เพิ่มที่ดิน"}</h2></div><button type="button" onClick={() => setEditing(null)}>ปิด</button></div><form onSubmit={submit}>
       <div className="admin-form-grid"><label>ชื่อ URL (Slug)<input name="slug" defaultValue={editing.slug} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="เช่น blue-diamond" required readOnly={Boolean(editing.slug)}/><small>ใช้ในลิงก์หน้าเว็บ ใส่ภาษาอังกฤษ ตัวเลข หรือขีดกลาง</small></label><label>ชื่อแปลง<input name="name" defaultValue={editing.name} required/></label><label>ทำเล<input name="location" defaultValue={editing.location} required/></label><label>เนื้อที่<input name="area" defaultValue={editing.area} required/></label><label>ราคา<input name="price" defaultValue={editing.price} required/></label><label>สถานะ<select name="status" defaultValue={editing.status}><option value="พร้อมขาย">พร้อมขาย</option><option value="พร้อมโอน">พร้อมโอน</option><option value="sold">ขายแล้ว</option></select></label><label>โฉนด<input name="titleDeed" defaultValue={editing.titleDeed}/></label><label>ถนน<input name="roadAccess" defaultValue={editing.roadAccess}/></label><label>ไฟฟ้า<input name="electricity" defaultValue={editing.electricity}/></label><label>Google Maps<input name="mapUrl" type="url" defaultValue={editing.mapUrl}/></label><label>YouTube<input name="youtubeUrl" type="url" defaultValue={editing.youtubeUrl}/></label></div>
       <label>รายละเอียด<textarea name="description" defaultValue={editing.description} rows={4}/></label><label>จุดเด่น — หนึ่งรายการต่อบรรทัด<textarea name="highlights" defaultValue={editing.highlights?.join("\n")} rows={4}/></label>
-      <div className="admin-image-uploader"><label>รูปที่ดิน<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={uploadImages} disabled={saving}/></label><p>เลือกได้หลายรูป รูปแรกเป็นภาพปก หลังอัปโหลดต้องกดปุ่ม “บันทึกข้อมูลและเผยแพร่หน้าบ้าน” ด้านล่างอีกครั้ง</p><strong className="admin-upload-count">รูปที่แนบกับรายการนี้: {imageValues.length} รูป</strong>{imageValues.length > 0 ? <ol className="admin-upload-list">{imageValues.map((url, index) => <li key={`${url}-${index}`}><Image className="admin-upload-thumb" src={url} width={112} height={76} alt={`ตัวอย่างรูปที่ดินลำดับ ${index + 1}`} unoptimized={url.startsWith("http")}/><span>รูปที่ {index + 1}{index === 0 ? " · ภาพปก" : ""}</span><button type="button" onClick={() => setImageValues((items) => items.filter((_, itemIndex) => itemIndex !== index))}>นำออก</button></li>)}</ol> : <p className="admin-upload-empty">รายการนี้ยังไม่มีรูปที่บันทึกไว้</p>}</div>
+      <div className="admin-image-uploader"><label>รูปที่ดิน<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={uploadImages} disabled={saving}/></label><p>เมื่อเลือกรูป ภาพตัวอย่างและสถานะจะขึ้นทันที รองรับ JPG, PNG, WebP, GIF ไม่เกิน 5 MB ต่อรูป</p>{uploads.length > 0 && <div className="admin-upload-progress" aria-live="polite">{uploads.map((item) => <article className={`is-${item.status}`} key={item.id}><Image src={item.preview} width={140} height={94} alt={`ภาพที่เลือก ${item.name}`} unoptimized/><div><strong>{item.name}</strong><span>{item.status === "uploading" ? "กำลังอัปโหลด…" : item.status === "success" ? "✓ อัปโหลดสำเร็จ — รอกดบันทึกข้อมูล" : `✕ ไม่สำเร็จ: ${item.error}`}</span></div></article>)}</div>}<strong className="admin-upload-count">รูปที่พร้อมบันทึกกับรายการนี้: {imageValues.length} รูป</strong>{imageValues.length > 0 ? <ol className="admin-upload-list">{imageValues.map((url, index) => <li key={`${url}-${index}`}><Image className="admin-upload-thumb" src={url} width={112} height={76} alt={`ตัวอย่างรูปที่ดินลำดับ ${index + 1}`} unoptimized/><span>รูปที่ {index + 1}{index === 0 ? " · ภาพปก" : ""}</span><button type="button" onClick={() => setImageValues((items) => items.filter((_, itemIndex) => itemIndex !== index))}>นำออก</button></li>)}</ol> : <p className="admin-upload-empty">รายการนี้ยังไม่มีรูปที่พร้อมบันทึก</p>}<p className="admin-upload-reminder">ขั้นตอนสุดท้าย: กด “บันทึกข้อมูลและเผยแพร่หน้าบ้าน” รูปจึงจะแสดงบนเว็บไซต์</p></div>
       <div className="admin-editor-actions"><button type="button" onClick={() => setEditing(null)}>ยกเลิก</button><button className="is-primary" type="submit" disabled={saving}>{saving ? "กำลังบันทึก…" : "บันทึกข้อมูลและเผยแพร่หน้าบ้าน"}</button></div>
     </form></section></div>}
   </section>;

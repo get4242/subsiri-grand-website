@@ -67,18 +67,22 @@ function getPublicContent() {
 function parseOutput(output) { return JSON.parse(output.getContent()); }
 
 function uploadImage(upload) {
-  if (!upload || !upload.data || !upload.mimeType) return jsonOutput({ ok: false, error: "invalid_upload" });
-  const rootName = "Subsiri Website Uploads";
-  const roots = DriveApp.getFoldersByName(rootName);
-  const root = roots.hasNext() ? roots.next() : DriveApp.createFolder(rootName);
-  const folderName = String(upload.folder || "general").replace(/[^a-zA-Z0-9_-]/g, "-");
-  const folders = root.getFoldersByName(folderName);
-  const folder = folders.hasNext() ? folders.next() : root.createFolder(folderName);
-  const bytes = Utilities.base64Decode(upload.data);
-  const blob = Utilities.newBlob(bytes, upload.mimeType, upload.filename || ("image-" + Date.now()));
-  const file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return jsonOutput({ ok: true, url: "https://drive.google.com/uc?export=view&id=" + file.getId(), fileId: file.getId() });
+  try {
+    if (!upload || !upload.data || !upload.mimeType) return jsonOutput({ ok: false, error: "invalid_upload" });
+    const rootName = "Subsiri Website Uploads";
+    const roots = DriveApp.getFoldersByName(rootName);
+    const root = roots.hasNext() ? roots.next() : DriveApp.createFolder(rootName);
+    const folderName = String(upload.folder || "general").replace(/[^a-zA-Z0-9_-]/g, "-");
+    const folders = root.getFoldersByName(folderName);
+    const folder = folders.hasNext() ? folders.next() : root.createFolder(folderName);
+    const bytes = Utilities.base64Decode(upload.data);
+    const blob = Utilities.newBlob(bytes, upload.mimeType, upload.filename || ("image-" + Date.now()));
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return jsonOutput({ ok: true, url: "https://lh3.googleusercontent.com/d/" + file.getId(), fileId: file.getId() });
+  } catch (error) {
+    return jsonOutput({ ok: false, error: "drive_upload_error: " + String(error && error.message || error) });
+  }
 }
 
 function getOrCreateSheet(name, headers) {

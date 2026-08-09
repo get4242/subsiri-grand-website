@@ -36,6 +36,7 @@ export const metadata: Metadata = {
     images: [{ url: "/subsiri-logo.png", width: 800, height: 800, alt: "โลโก้บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" }],
   },
   twitter: { card: "summary", title: "ทรัพย์สิริ แกรนด์ กรุ๊ป", description: "บริการด้านที่ดิน ฮวงจุ้ย พิธีพราหมณ์ และโหราศาสตร์ไทย–จีน", images: ["/subsiri-logo.png"] },
+  verification: { google: "drQHgjDnosJR2bodGG7u0RVAooNi_lGZhq0ddjfJ1IQ" },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };

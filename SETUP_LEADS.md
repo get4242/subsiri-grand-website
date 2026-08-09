@@ -96,7 +96,19 @@ function jsonResponse(data) {
 - ส่งเข้ากลุ่ม: เปิด **Allow bot to join group chats**, เชิญ OA เข้ากลุ่ม แล้วอ่าน `source.groupId` จาก webhook event เมื่อสมาชิกส่งข้อความในกลุ่ม
 - ส่งเข้าห้องแบบ multi-person chat: อ่าน `source.roomId` จาก webhook event
 
-LINE ID ที่ผู้ใช้ตั้งให้ค้นหาได้ เช่น `@ชื่อบัญชี` ไม่ใช่ `userId` และใช้แทน `LINE_TARGET_ID` ไม่ได้ สำหรับกลุ่มหรือห้อง จำเป็นต้องมี webhook receiver ชั่วคราวหรือระบบ webhook ของโครงการเพื่อบันทึก ID จาก event อย่างปลอดภัย
+LINE ID ที่ผู้ใช้ตั้งให้ค้นหาได้ เช่น `@ชื่อบัญชี` ไม่ใช่ `userId` และใช้แทน `LINE_TARGET_ID` ไม่ได้
+
+### ตั้งกลุ่มผู้ดูแลเป็นปลายทางแจ้งเตือน
+
+โครงการมี Function `/.netlify/functions/line-webhook` สำหรับจับ `groupId` อัตโนมัติ โดยตรวจลายเซ็นจาก LINE ก่อนบันทึกลง Netlify Blobs
+
+1. คัดลอก **Channel secret** จากแท็บ Basic settings ไปตั้งใน Netlify เป็น `LINE_CHANNEL_SECRET`
+2. ใน LINE Developers → Messaging API ตั้ง Webhook URL เป็น `https://subsiri.co.th/.netlify/functions/line-webhook`
+3. กด Verify แล้วเปิด **Use webhook** และ **Allow bot to join group chats**
+4. สร้างกลุ่มที่มีผู้ดูแลทุกคน แล้วเชิญ LINE OA เข้ากลุ่ม
+5. ส่งข้อความธรรมดาในกลุ่มหนึ่งครั้ง ระบบจะบันทึก `groupId` และใช้กลุ่มเป็นปลายทางแจ้งเตือนอัตโนมัติ
+
+หลังจับกลุ่มสำเร็จ `LINE_TARGET_ID` เดิมยังคงเป็นปลายทางสำรอง ไม่ต้องลบออก Webhook URL นี้สามารถต่อยอด AI Chatbot ภายหลังได้โดยเพิ่มตัวจัดการ message event ใน Function เดิม
 
 ## 5. ตั้งค่า Environment Variables ใน Netlify
 
@@ -105,6 +117,7 @@ LINE ID ที่ผู้ใช้ตั้งให้ค้นหาได้
 - `GOOGLE_APPS_SCRIPT_URL`
 - `LEADS_SHARED_SECRET`
 - `LINE_CHANNEL_ACCESS_TOKEN`
+- `LINE_CHANNEL_SECRET`
 - `LINE_TARGET_ID`
 
 ถ้าบัญชีรองรับการกำหนด Scope ให้เปิดอย่างน้อย **Functions** ค่าเหล่านี้ต้องตั้งผ่าน Netlify UI/CLI/API ไม่ควรใส่ secret ใน `netlify.toml` หลังแก้ environment variables ให้ deploy ใหม่เพื่อให้ Function ใช้ค่าล่าสุด

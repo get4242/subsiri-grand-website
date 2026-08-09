@@ -1,3 +1,5 @@
+import { getStore } from "@netlify/blobs";
+
 type LeadInput = {
   name?: unknown;
   phone?: unknown;
@@ -159,9 +161,9 @@ export default async function submitLead(request: Request) {
   const googleUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
   const sharedSecret = process.env.LEADS_SHARED_SECRET;
   const lineToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const lineTarget = process.env.LINE_TARGET_ID;
+  const fallbackLineTarget = process.env.LINE_TARGET_ID;
 
-  if (!googleUrl || !sharedSecret || !lineToken || !lineTarget) {
+  if (!googleUrl || !sharedSecret || !lineToken || !fallbackLineTarget) {
     return json(503, {
       ok: false,
       error: "ระบบรับข้อมูลยังตั้งค่าไม่ครบ กรุณาโทร 090-249-1459 หรือติดต่อ contact@subsiri.co.th",
@@ -169,6 +171,8 @@ export default async function submitLead(request: Request) {
   }
 
   try {
+    const savedTarget = await getStore({ name: "site-settings", consistency: "strong" }).get("line-notification-target", { type: "json" }).catch(() => null) as { targetId?: unknown } | null;
+    const lineTarget = savedTarget && typeof savedTarget.targetId === "string" && /^[CR][0-9a-f]{32}$/i.test(savedTarget.targetId) ? savedTarget.targetId : fallbackLineTarget;
     const sheetResponse = await fetch(googleUrl, {
       method: "POST",
       redirect: "follow",

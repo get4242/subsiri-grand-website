@@ -3,14 +3,23 @@ export type LineWebhookEvent = {
   source?: { type?: unknown; groupId?: unknown; roomId?: unknown; userId?: unknown };
 };
 
-export function notificationTargetFromEvents(events: unknown): string | null {
-  if (!Array.isArray(events)) return null;
+export function isLineNotificationTarget(value: unknown): value is string {
+  return typeof value === "string" && /^[CR][0-9a-f]{32}$/i.test(value);
+}
+
+export function notificationTargetsFromEvents(events: unknown): string[] {
+  if (!Array.isArray(events)) return [];
+  const targetIds = new Set<string>();
   for (const event of events as LineWebhookEvent[]) {
     const source = event?.source;
-    if (source?.type === "group" && typeof source.groupId === "string" && /^C[0-9a-f]{32}$/i.test(source.groupId)) return source.groupId;
-    if (source?.type === "room" && typeof source.roomId === "string" && /^R[0-9a-f]{32}$/i.test(source.roomId)) return source.roomId;
+    const targetId = source?.type === "group" ? source.groupId : source?.type === "room" ? source.roomId : null;
+    if (isLineNotificationTarget(targetId)) targetIds.add(targetId);
   }
-  return null;
+  return [...targetIds];
+}
+
+export function notificationTargetFromEvents(events: unknown): string | null {
+  return notificationTargetsFromEvents(events)[0] || null;
 }
 
 function base64(bytes: ArrayBuffer) {

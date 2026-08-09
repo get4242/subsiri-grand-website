@@ -171,8 +171,13 @@ export default async function submitLead(request: Request) {
   }
 
   try {
-    const savedTarget = await getStore({ name: "site-settings", consistency: "strong" }).get("line-notification-target", { type: "json" }).catch(() => null) as { targetId?: unknown } | null;
-    const lineTarget = savedTarget && typeof savedTarget.targetId === "string" && /^[CR][0-9a-f]{32}$/i.test(savedTarget.targetId) ? savedTarget.targetId : fallbackLineTarget;
+    const settingsStore = getStore({ name: "site-settings", consistency: "strong" });
+    const savedTargets = await settingsStore.get("line-notification-targets", { type: "json" }).catch(() => null) as { targetIds?: unknown } | null;
+    const legacyTarget = await settingsStore.get("line-notification-target", { type: "json" }).catch(() => null) as { targetId?: unknown } | null;
+    const persistedTargets = Array.isArray(savedTargets?.targetIds) ? savedTargets.targetIds.filter((target): target is string => typeof target === "string" && /^[CR][0-9a-f]{32}$/i.test(target)) : [];
+    if (legacyTarget && typeof legacyTarget.targetId === "string" && /^[CR][0-9a-f]{32}$/i.test(legacyTarget.targetId)) persistedTargets.push(legacyTarget.targetId);
+    const lineTargets = [...new Set(persistedTargets)];
+    if (!lineTargets.length) lineTargets.push(fallbackLineTarget);
     const sheetResponse = await fetch(googleUrl, {
       method: "POST",
       redirect: "follow",
@@ -187,19 +192,16 @@ export default async function submitLead(request: Request) {
       return json(502, { ok: false, error: "Google Sheets ไม่ยืนยันการบันทึกข้อมูล กรุณาตรวจสอบ Apps Script" });
     }
 
-    const lineResponse = await fetch("https://api.line.me/v2/bot/message/push", {
+    const lineResponses = await Promise.all(lineTargets.map((targetId) => fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${lineToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        to: lineTarget,
-        messages: [buildLineMessage(lead)],
-      }),
-    });
+      body: JSON.stringify({ to: targetId, messages: [buildLineMessage(lead)] }),
+    }).then((response) => response.ok).catch(() => false)));
 
-    if (!lineResponse.ok) {
+    if (lineResponses.some((sent) => !sent)) {
       return json(202, {
         ok: true,
         warning: "บันทึกข้อมูลแล้ว แต่การแจ้งเตือนทีมงานขัดข้อง ทีมงานจะตรวจสอบจากรายการ Lead",

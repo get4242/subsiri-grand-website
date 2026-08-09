@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ServiceDetail } from "@/components/ServiceDetail";
 
-export const metadata: Metadata = { title: "ตั้งศาลและพิธีพราหมณ์" };
+export const metadata: Metadata = { title: "ตั้งศาลพระภูมิและพิธีพราหมณ์", description: "บริการตั้งศาลพระภูมิ ศาลตา–ยาย ศาลพระพรหม ถอนหรือย้ายศาล พิธีบวงสรวงและลงเสาเอก ราคาเริ่มต้น 20,000 บาท", keywords: ["ตั้งศาลพระภูมิ", "ตั้งศาลตายาย", "ตั้งศาลพระพรหม", "ย้ายศาล", "ถอนศาล", "พิธีพราหมณ์", "พิธีบวงสรวง", "ลงเสาเอก"], alternates: { canonical: "/services/ceremonies" } };
 
 export default function CeremoniesPage() {
   return <ServiceDetail

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CmsPropertyGrid } from "@/components/CmsPropertyViews";
 import { properties } from "@/data/properties";
 import { homeHeroAsset } from "@/config/assets";
@@ -7,6 +8,8 @@ import { HeroWireMesh } from "@/components/HeroWireMesh";
 import { ContactActions } from "@/components/ContactActions";
 import { CmsHomeServices } from "@/components/CmsServiceCatalog";
 import { CmsHomeArticles } from "@/components/CmsArticleViews";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 type BenefitIconName = "map-pin" | "mountain" | "compass" | "landmark";
 

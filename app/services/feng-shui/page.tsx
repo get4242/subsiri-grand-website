@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ServiceDetail } from "@/components/ServiceDetail";
 
-export const metadata: Metadata = { title: "บริการดูฮวงจุ้ย" };
+export const metadata: Metadata = { title: "บริการดูฮวงจุ้ยบ้าน ที่ดิน และโครงการ", description: "บริการพิจารณาฮวงจุ้ยและชัยภูมิสำหรับบ้าน ที่ดิน และโครงการ ราคาเริ่มต้น 15,000 บาทต่อโครงการ ขึ้นอยู่กับขนาดพื้นที่", keywords: ["ดูฮวงจุ้ย", "ฮวงจุ้ยบ้าน", "ฮวงจุ้ยที่ดิน", "ซินแสฮวงจุ้ย"], alternates: { canonical: "/services/feng-shui" } };
 
 export default function FengShuiPage() {
   return <ServiceDetail

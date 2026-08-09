@@ -54,6 +54,7 @@ export default defineConfig(async () => {
 
     return {
       plugins: [vinext(), nitro()],
+      build: { sourcemap: false },
     };
   }
 
@@ -70,5 +71,6 @@ export default defineConfig(async () => {
         config: localBindingConfig,
       }),
     ],
+    build: { sourcemap: false },
   };
 });

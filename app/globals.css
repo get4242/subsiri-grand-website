@@ -144,10 +144,10 @@ body:has(.lux-hero) .site-header{height:72px;background:linear-gradient(180deg,r
 body:has(.lux-hero) .site-header .nav-shell{height:72px;max-width:none;padding:0 2.8vw;gap:24px}
 body:has(.lux-hero) .site-header .brand-logo img{width:55px;height:55px}
 
-/* New company wordmark: keep its full shape legible instead of cropping it into a circle. */
-.brand-logo img{width:128px!important;height:60px!important;object-fit:contain!important;border-radius:5px!important;background:#fff!important;box-shadow:none!important}
-@media(max-width:900px){.brand-logo img{width:112px!important;height:52px!important}}
-@media(max-width:620px){.brand-logo img{width:94px!important;height:44px!important}}
+/* New company logo: preserve its natural square presentation without stretching. */
+.brand-logo img{width:68px!important;height:68px!important;object-fit:contain!important;border-radius:5px!important;background:#fff!important;box-shadow:none!important}
+@media(max-width:900px){.brand-logo img{width:58px!important;height:58px!important}}
+@media(max-width:620px){.brand-logo img{width:50px!important;height:50px!important}}
 body:has(.lux-hero) .site-header .desktop-nav{gap:22px;font-size:.76rem}
 body:has(.lux-hero) .site-header .contact-actions--header{margin-left:4px}
 .lux-hero{height:650px!important;min-height:650px!important;padding:72px 0 0!important;display:block!important;position:relative;isolation:isolate;overflow:hidden;background:#071b2b}

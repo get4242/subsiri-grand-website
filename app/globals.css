@@ -143,6 +143,11 @@ h1,h2,h3,h4,h5,h6,.footer-brand,.property-facts strong{font-family:var(--font-ka
 body:has(.lux-hero) .site-header{height:72px;background:linear-gradient(180deg,rgba(3,13,24,.82),rgba(3,13,24,.18));border-bottom:1px solid rgba(228,193,126,.16);backdrop-filter:none}
 body:has(.lux-hero) .site-header .nav-shell{height:72px;max-width:none;padding:0 2.8vw;gap:24px}
 body:has(.lux-hero) .site-header .brand-logo img{width:55px;height:55px}
+
+/* New company wordmark: keep its full shape legible instead of cropping it into a circle. */
+.brand-logo img{width:128px!important;height:60px!important;object-fit:contain!important;border-radius:5px!important;background:#fff!important;box-shadow:none!important}
+@media(max-width:900px){.brand-logo img{width:112px!important;height:52px!important}}
+@media(max-width:620px){.brand-logo img{width:94px!important;height:44px!important}}
 body:has(.lux-hero) .site-header .desktop-nav{gap:22px;font-size:.76rem}
 body:has(.lux-hero) .site-header .contact-actions--header{margin-left:4px}
 .lux-hero{height:650px!important;min-height:650px!important;padding:72px 0 0!important;display:block!important;position:relative;isolation:isolate;overflow:hidden;background:#071b2b}

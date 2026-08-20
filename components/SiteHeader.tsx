@@ -33,7 +33,7 @@ export function SiteHeader() {
 
   const closeAll = () => { setMenuOpen(false); setServiceOpen(false); };
   return <header className="site-header"><div className="nav-shell">
-    <Link className="brand brand-logo" href="/" aria-label="ทรัพย์สิริ แกรนด์ กรุ๊ป หน้าแรก" onClick={closeAll}><Image src="/subsiri-logo.jpg" alt="โลโก้บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" width={212} height={198} priority /></Link>
+    <Link className="brand brand-logo" href="/" aria-label="ทรัพย์สิริ แกรนด์ กรุ๊ป หน้าแรก" onClick={closeAll}><Image src="/subsiri-logo-uniform.png" alt="โลโก้บริษัท ทรัพย์สิริ แกรนด์ กรุ๊ป จำกัด" width={1256} height={1256} priority /></Link>
     <nav className="desktop-nav" aria-label="เมนูหลัก">
       <Link href="/" onClick={closeAll}>หน้าแรก</Link><Link href="/land" onClick={closeAll}>ที่ดิน</Link>
       <div className="nav-services" ref={serviceMenuRef}><button type="button" aria-expanded={serviceOpen} aria-controls="desktop-services-menu" onClick={() => setServiceOpen((open) => !open)}>บริการ</button>{serviceOpen && <div id="desktop-services-menu" className="desktop-services-menu"><Link className="all-services" href="/services" onClick={closeAll}>บริการทั้งหมด</Link>{serviceCatalog.map((service) => <Link key={service.href} href={service.href} onClick={closeAll}>{service.title}</Link>)}</div>}</div>
